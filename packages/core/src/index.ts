@@ -1,4 +1,5 @@
 const OFFSCREEN_SELECTOR = '[data-scrape-canary]'
+const BOT_REGEX = /(googlebot|bingbot|duckduckbot|slurp|baiduspider|yandexbot|sogou|exabot)/i
 const pickRandomSentence = (): string =>
   DEFAULT_SENTENCES[Math.floor(Math.random() * DEFAULT_SENTENCES.length)] ?? 'canary'
 
@@ -54,6 +55,8 @@ const ensureOffscreenNode = (payload: string): void => {
 
   node.textContent = payload
   node.setAttribute('aria-hidden', 'true')
+  node.setAttribute('role', 'presentation')
+  node.hidden = true
   node.style.position = 'absolute'
   node.style.left = '-10000px'
   node.style.top = '0px'
@@ -68,14 +71,41 @@ const ensureOffscreenNode = (payload: string): void => {
   node.style.visibility = 'hidden'
 }
 
+const signalHeader = (payload: string): void => {
+  // Best-effort signal to the origin/CDN by sending a HEAD request with the header.
+  // Response headers cannot be set from the client, so this only emits a request header for logging.
+  try {
+    if (typeof fetch === 'function' && typeof location !== 'undefined') {
+      void fetch(location.href, {
+        method: 'HEAD',
+        mode: 'no-cors',
+        keepalive: true,
+        headers: { 'X-Canary': payload },
+      }).catch(() => {})
+    }
+  } catch {
+    /* noop */
+  }
+}
+
+const getUserAgent = (): string => {
+  if (typeof navigator !== 'undefined' && navigator.userAgent) return navigator.userAgent
+  return ''
+}
+
+const isSearchBot = (ua: string): boolean => BOT_REGEX.test(ua)
+
 export function init(): void {
   if (typeof document === 'undefined') return
+  const ua = getUserAgent()
+  if (isSearchBot(ua)) return
 
   const payloadText = pickRandomSentence()
 
   const initWhenReady = () => {
     ensureInnerTextPolyfill()
     ensureUserSelectPolyfill()
+    signalHeader(payloadText)
     ensureComment(payloadText)
     ensureOffscreenNode(payloadText)
   }

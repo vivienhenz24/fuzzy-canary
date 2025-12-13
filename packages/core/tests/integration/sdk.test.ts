@@ -48,13 +48,13 @@ describe('SDK Integration - best-practice canary placement', () => {
     expect(offscreen.getAttribute('aria-hidden')).toBe('true')
   })
 
-  it('still renders the off-screen node for search bots', async () => {
+  it('skips canary surfaces for search bots', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)')
     init()
     await waitForDOMUpdate()
 
-    expect(document.querySelector('[data-scrape-canary]')).not.toBeNull()
-    expect(collectComments().length).toBeGreaterThan(0)
+    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
+    expect(collectComments().length).toBe(0)
   })
 
   it('does not inject keyword-stuffed visible text', async () => {

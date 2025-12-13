@@ -38,12 +38,12 @@ describe('runtime.ts', () => {
     expect(collectComments().length).toBeGreaterThan(0)
   })
 
-  it('still renders off-screen node even when UA looks like a search bot', async () => {
+  it('skips off-screen node when UA looks like a search bot', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
     await import('../../src/runtime')
     ;(window as any).YourPkg.init()
     await waitForDOMUpdate()
 
-    expect(document.querySelector('[data-scrape-canary]')).not.toBeNull()
+    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
   })
 })

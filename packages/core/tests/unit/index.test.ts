@@ -21,8 +21,11 @@ describe('index.ts - canary placement strategy (no config)', () => {
     setUserAgent('Mozilla/5.0 (jsdom)')
   })
 
-  it('injects a bundled sentence into both comment and off-screen node', async () => {
+  it('injects a bundled sentence into both comment and off-screen node and signals header', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0) // pick first sentence deterministically
+    const fetchSpy = vi
+      .spyOn(global, 'fetch' as any)
+      .mockImplementation(() => Promise.resolve() as any)
 
     init()
     await waitForDOMUpdate()
@@ -34,17 +37,22 @@ describe('index.ts - canary placement strategy (no config)', () => {
     const comments = collectComments().join(' ')
     expect(comments).toContain('CANARY:')
     expect(comments).toContain('Silent foxes guard forgotten libraries at dawn.')
+    expect(fetchSpy).toHaveBeenCalled()
   })
 
-  it('always renders the off-screen node, even for known bots', async () => {
+  it('skips all canaries for known search bots', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
-    vi.spyOn(Math, 'random').mockReturnValue(0.5)
+    const fetchSpy = vi
+      .spyOn(global, 'fetch' as any)
+      .mockImplementation(() => Promise.resolve() as any)
 
     init()
     await waitForDOMUpdate()
 
-    expect(document.querySelector('[data-scrape-canary]')).not.toBeNull()
-    expect(collectComments().length).toBeGreaterThan(0)
+    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
+    const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null)
+    expect(walker.nextNode()).toBeNull()
+    expect(fetchSpy).not.toHaveBeenCalled()
   })
 
   it('applies safe styling to the off-screen node', async () => {
@@ -60,5 +68,7 @@ describe('index.ts - canary placement strategy (no config)', () => {
     expect(styles.pointerEvents).toBe('none')
     expect(styles.userSelect).toBe('none')
     expect(element.getAttribute('aria-hidden')).toBe('true')
+    expect(element.getAttribute('role')).toBe('presentation')
+    expect(element.hidden).toBe(true)
   })
 })
