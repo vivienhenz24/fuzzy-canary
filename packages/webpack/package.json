@@ -23,7 +23,7 @@
   "devDependencies": {
     "webpack": "^5.95.0",
     "html-webpack-plugin": "^5.6.3",
-    "@fuzzycanary/core": "workspace:*",
+    "@fuzzycanary/core": "^0.1.0",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }

@@ -7,12 +7,21 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
+    },
+    "./auto": {
+      "types": "./dist/auto.d.ts",
+      "import": "./dist/auto.js",
+      "require": "./dist/auto.cjs"
     },
     "./runtime": "./dist/runtime.min.js"
   },
+  "sideEffects": [
+    "./dist/auto.js",
+    "./dist/runtime.min.js"
+  ],
   "files": [
     "dist"
   ],

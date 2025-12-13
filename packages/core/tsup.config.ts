@@ -1,6 +1,6 @@
 /**
  * tsup.config.ts
- * 
+ *
  * Build configuration for the core package.
  * Defines how to bundle the SDK into multiple formats:
  * - ESM and CJS for npm imports
@@ -12,7 +12,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig([
   // ESM and CJS builds for npm
   {
-    entry: ['src/index.ts'],
+    entry: ['src/index.ts', 'src/auto.ts'],
     format: ['esm', 'cjs'],
     dts: true,
     clean: true,
