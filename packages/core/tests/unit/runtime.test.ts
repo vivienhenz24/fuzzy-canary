@@ -27,27 +27,23 @@ describe('runtime.ts', () => {
     expect(typeof (window as any).YourPkg.init).toBe('function')
   })
 
-  it('allows calling init from the global to place header/meta/comment/offscreen canaries', async () => {
-    const registerHeader = vi.fn()
+  it('allows calling init from the global to place comment/offscreen canaries', async () => {
     await import('../../src/runtime')
 
-    ;(window as any).YourPkg.init({ token: 'runtime-canary', registerHeader })
+    vi.spyOn(Math, 'random').mockReturnValue(0.75)
+    ;(window as any).YourPkg.init()
     await waitForDOMUpdate()
 
-    expect(registerHeader).toHaveBeenCalledWith('X-Canary', 'runtime-canary')
-    expect(document.querySelector('meta[name="scrape-canary"]')?.getAttribute('content')).toBe('runtime-canary')
     expect(document.querySelector('[data-scrape-canary]')).toBeTruthy()
     expect(collectComments().length).toBeGreaterThan(0)
   })
 
-  it('skips the rendered off-screen node when the UA looks like a search bot', async () => {
+  it('still renders off-screen node even when UA looks like a search bot', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
     await import('../../src/runtime')
-
-    ;(window as any).YourPkg.init({ token: 'runtime-canary' })
+    ;(window as any).YourPkg.init()
     await waitForDOMUpdate()
 
-    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
-    expect(document.querySelector('meta[name="scrape-canary"]')).toBeTruthy()
+    expect(document.querySelector('[data-scrape-canary]')).not.toBeNull()
   })
 })

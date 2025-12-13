@@ -25,16 +25,15 @@ import { YourPkgScript } from '../src/index'
 
 describe('@fuzzycanary/next', () => {
   it('calls init on mount when enabled', () => {
-    const props = { token: 'canary-token' }
-    const result = YourPkgScript(props)
+    const result = YourPkgScript({})
 
     expect(result).toBeNull()
-    expect(mocks.initMock).toHaveBeenCalledWith(props)
+    expect(mocks.initMock).toHaveBeenCalled()
   })
 
   it('does not call init when disabled', () => {
     mocks.initMock.mockClear()
-    YourPkgScript({ token: 'canary-token', enabled: false })
+    YourPkgScript({ enabled: false })
     expect(mocks.initMock).not.toHaveBeenCalled()
   })
 })

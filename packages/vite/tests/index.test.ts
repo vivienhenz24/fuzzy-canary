@@ -11,10 +11,9 @@ const baseHtml = `
 
 describe('@fuzzycanary/vite plugin', () => {
   it('injects inline module into head by default', () => {
-    const plugin = yourPkgVitePlugin({ token: 'abc' })
+    const plugin = yourPkgVitePlugin({})
     const transformed = plugin.transformIndexHtml!(baseHtml) as string
     expect(transformed).toContain("import { init } from '@fuzzycanary/core'")
-    expect(transformed).toContain('abc')
     const headIndex = transformed.indexOf('import { init')
     const bodyIndex = transformed.indexOf('<body>')
     expect(headIndex).toBeGreaterThan(0)
@@ -22,11 +21,10 @@ describe('@fuzzycanary/vite plugin', () => {
   })
 
   it('injects into body when position=body', () => {
-    const plugin = yourPkgVitePlugin({ token: 'xyz', position: 'body' })
+    const plugin = yourPkgVitePlugin({ position: 'body' })
     const transformed = plugin.transformIndexHtml!(baseHtml) as string
     const headIndex = transformed.indexOf('import { init')
     const bodyIndex = transformed.lastIndexOf('</body>')
     expect(headIndex).toBeLessThan(bodyIndex)
-    expect(transformed).toContain('xyz')
   })
 })

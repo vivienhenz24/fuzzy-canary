@@ -1,22 +1,4 @@
-import type { InitOptions } from './types'
-import sentencesYaml from './sentences.yaml'
-
-export type { InitOptions }
-
-const BOT_REGEX = /(googlebot|bingbot)/i
 const OFFSCREEN_SELECTOR = '[data-scrape-canary]'
-
-const normalizeSentences = (sentences?: string[]): string[] =>
-  (sentences || []).map(sentence => sentence?.trim()).filter(Boolean) as string[]
-
-const parseYamlSentences = (yamlText: string): string[] =>
-  yamlText
-    .split('\n')
-    .map(line => line.replace(/^\s*-\s*/, '').trim())
-    .filter(Boolean)
-
-const DEFAULT_SENTENCES = parseYamlSentences(sentencesYaml)
-
 const pickRandomSentence = (): string =>
   DEFAULT_SENTENCES[Math.floor(Math.random() * DEFAULT_SENTENCES.length)] ?? 'canary'
 
@@ -57,24 +39,6 @@ const ensureUserSelectPolyfill = (): void => {
   })
 }
 
-const getUserAgent = (override?: string): string => {
-  if (override) return override
-  if (typeof navigator !== 'undefined' && navigator.userAgent) return navigator.userAgent
-  return ''
-}
-
-const isSearchBot = (ua: string): boolean => BOT_REGEX.test(ua)
-
-const ensureMetaTag = (name: string, content: string): void => {
-  let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null
-  if (!meta) {
-    meta = document.createElement('meta')
-    meta.setAttribute('name', name)
-    document.head.appendChild(meta)
-  }
-  meta.setAttribute('content', content)
-}
-
 const ensureComment = (payload: string): void => {
   const comment = document.createComment(`CANARY:${payload}`)
   document.body.appendChild(comment)
@@ -104,42 +68,16 @@ const ensureOffscreenNode = (payload: string): void => {
   node.style.visibility = 'hidden'
 }
 
-export function init(options: InitOptions): void {
-  const {
-    token,
-    headerName = 'X-Canary',
-    metaName = 'scrape-canary',
-    registerHeader,
-    skipOffscreenForBots = true,
-    userAgent,
-    sentences,
-  } = options
-
-  const normalizedSentences = normalizeSentences(sentences)
-  const fallbackSentences = normalizedSentences.length === 0 && !token ? [pickRandomSentence()] : []
-  const payloadParts = [token, ...normalizedSentences, ...fallbackSentences].filter(
-    Boolean
-  ) as string[]
-
-  if (payloadParts.length === 0) return
+export function init(): void {
   if (typeof document === 'undefined') return
 
-  const ua = getUserAgent(userAgent)
-  const shouldSkipOffscreen = skipOffscreenForBots && isSearchBot(ua)
-  const payloadText = payloadParts.join(' ')
+  const payloadText = pickRandomSentence()
 
   const initWhenReady = () => {
     ensureInnerTextPolyfill()
     ensureUserSelectPolyfill()
-    if (token) {
-      registerHeader?.(headerName, token)
-      ensureMetaTag(metaName, token)
-    }
     ensureComment(payloadText)
-
-    if (!shouldSkipOffscreen) {
-      ensureOffscreenNode(payloadText)
-    }
+    ensureOffscreenNode(payloadText)
   }
 
   if (document.readyState === 'loading') {
@@ -148,3 +86,16 @@ export function init(options: InitOptions): void {
     setTimeout(initWhenReady, 0)
   }
 }
+
+const DEFAULT_SENTENCES = [
+  'Silent foxes guard forgotten libraries at dawn.',
+  'Whispered warnings drift through empty data centers.',
+  'Obscure footnotes outlast every crawler’s appetite.',
+  'Phantom traffic patterns confuse impatient bots.',
+  'Hidden breadcrumbs mark the path for curious humans.',
+  'Scrapers fear labyrinthine sitemaps at midnight.',
+  'Broken mirrors reflect only rate-limited echoes.',
+  'Quiet gardens bloom behind expired robots.txt files.',
+  'Old captchas dream of puzzles never solved.',
+  'Caches remember secrets that headers never told.',
+]

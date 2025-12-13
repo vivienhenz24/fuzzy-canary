@@ -17,12 +17,9 @@ import yourPkgVitePlugin from '@fuzzycanary/vite'
 
 export default defineConfig({
   plugins: [
-    yourPkgVitePlugin({
-      token: 'your-token', // plus any InitOptions from @fuzzycanary/core
-      position: 'head',    // or 'body'
-    }),
+    yourPkgVitePlugin({ position: 'head' }), // or 'body'
   ],
 })
 ```
 
-This plugin is intentionally thin: it only injects an inline module that imports `init()` from `@fuzzycanary/core` with your options. All logic stays in the core SDK.
+This plugin is intentionally thin: it only injects an inline module that imports `init()` from `@fuzzycanary/core`. All logic stays in the core SDK.

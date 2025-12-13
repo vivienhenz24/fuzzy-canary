@@ -1,7 +1,6 @@
 import type { Plugin } from 'vite'
-import type { InitOptions } from '@fuzzycanary/core'
 
-export interface YourPkgViteOptions extends InitOptions {
+export interface YourPkgViteOptions {
   /**
    * Where to inject the script tag in HTML.
    * 'head' (default) or 'body'
@@ -13,11 +12,9 @@ export interface YourPkgViteOptions extends InitOptions {
  * Vite plugin that injects a tiny inline module calling init() from @fuzzycanary/core.
  * Keeps all logic in @fuzzycanary/core; this only wires the call during HTML build.
  */
-export function yourPkgVitePlugin(options: YourPkgViteOptions): Plugin {
-  const { position = 'head', ...initOptions } = options
-  const script = `<script type="module">import { init } from '@fuzzycanary/core'; init(${JSON.stringify(
-    initOptions
-  )});</script>`
+export function yourPkgVitePlugin(options: YourPkgViteOptions = {}): Plugin {
+  const { position = 'head' } = options
+  const script = `<script type="module">import { init } from '@fuzzycanary/core'; init();</script>`
 
   return {
     name: '@fuzzycanary/vite',

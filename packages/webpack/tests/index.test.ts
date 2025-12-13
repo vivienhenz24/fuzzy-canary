@@ -23,7 +23,7 @@ import { YourPkgWebpackPlugin } from '../src'
 
 describe('@fuzzycanary/webpack plugin', () => {
   it('registers alterAssetTagGroups and injects script into head by default', () => {
-    const plugin = new YourPkgWebpackPlugin({ token: 'abc' })
+    const plugin = new YourPkgWebpackPlugin({})
 
     const compilationHook = { tap: vi.fn((_, fn) => fn({})) }
     const compiler: any = { hooks: { compilation: compilationHook } }
@@ -37,11 +37,11 @@ describe('@fuzzycanary/webpack plugin', () => {
     capturedCallback(data)
 
     expect(data.headTags.length).toBe(1)
-    expect(JSON.stringify(data.headTags[0])).toContain('abc')
+    expect(JSON.stringify(data.headTags[0])).toContain("import { init } from '@fuzzycanary/core'")
   })
 
   it('injects into body when position=body', () => {
-    const plugin = new YourPkgWebpackPlugin({ token: 'xyz', position: 'body' })
+    const plugin = new YourPkgWebpackPlugin({ position: 'body' })
     const compilationHook = { tap: vi.fn((_, fn) => fn({})) }
     const compiler: any = { hooks: { compilation: compilationHook } }
 
@@ -51,6 +51,6 @@ describe('@fuzzycanary/webpack plugin', () => {
     capturedCallback(data)
 
     expect(data.bodyTags.length).toBe(1)
-    expect(JSON.stringify(data.bodyTags[0])).toContain('xyz')
+    expect(JSON.stringify(data.bodyTags[0])).toContain("import { init } from '@fuzzycanary/core'")
   })
 })

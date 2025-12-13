@@ -18,12 +18,9 @@ const { YourPkgWebpackPlugin } = require('@fuzzycanary/webpack')
 module.exports = {
   plugins: [
     new HtmlWebpackPlugin(),
-    new YourPkgWebpackPlugin({
-      token: 'your-token', // plus any InitOptions from @fuzzycanary/core
-      position: 'head',    // or 'body'
-    }),
+    new YourPkgWebpackPlugin({ position: 'head' }), // or 'body'
   ],
 }
 ```
 
-This plugin is intentionally thin: it only injects the inline module that imports `init()` from `@fuzzycanary/core` with your options. All logic stays in the core SDK.
+This plugin is intentionally thin: it only injects the inline module that imports `init()` from `@fuzzycanary/core`. All logic stays in the core SDK.

@@ -19,7 +19,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         {children}
-        <YourPkgScript token="your-token" />
+        <YourPkgScript />
       </body>
     </html>
   )
@@ -37,10 +37,10 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <>
       <Component {...pageProps} />
-      <YourPkgScript token="your-token" />
+      <YourPkgScript />
     </>
   )
 }
 ```
 
-`YourPkgScript` accepts the same options as `init()` from `@fuzzycanary/core`.
+`YourPkgScript` accepts a single prop `enabled` (default `true`); when enabled it simply calls `init()` on mount with no configuration.

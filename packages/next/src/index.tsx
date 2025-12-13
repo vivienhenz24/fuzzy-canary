@@ -1,8 +1,7 @@
 import { useEffect } from 'react'
-import type { InitOptions } from '@fuzzycanary/core'
 import { init } from '@fuzzycanary/core'
 
-export type YourPkgScriptProps = InitOptions & {
+export type YourPkgScriptProps = {
   /** Set false to skip init entirely */
   enabled?: boolean
 }
@@ -11,12 +10,12 @@ export type YourPkgScriptProps = InitOptions & {
  * Next.js adapter component that calls init() on the client after mount.
  * Safe for both App Router and Pages Router usage.
  */
-export function YourPkgScript({ enabled = true, ...options }: YourPkgScriptProps) {
+export function YourPkgScript({ enabled = true }: YourPkgScriptProps) {
   useEffect(() => {
     if (!enabled) return
     if (typeof window === 'undefined') return
-    init(options)
-  }, [enabled, options])
+    init()
+  }, [enabled])
 
   return null
 }
