@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const PORT = Number(process.env.E2E_PORT || 3000)
+const BASE_URL = `http://localhost:${PORT}`
+
 export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
@@ -7,9 +10,9 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
-  
+
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
   },
 
@@ -29,10 +32,9 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'python3 -m http.server 3000',
-    url: 'http://localhost:3000',
+    command: `python3 -m http.server ${PORT}`,
+    url: BASE_URL,
     cwd: './tests/fixtures',
     reuseExistingServer: !process.env.CI,
   },
 })
-

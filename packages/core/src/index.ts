@@ -57,8 +57,13 @@ const ensureOffscreenNode = (token: string): void => {
   node.style.position = 'absolute'
   node.style.left = '-10000px'
   node.style.top = '0px'
+  node.style.width = '1px'
+  node.style.height = '1px'
+  node.style.overflow = 'hidden'
+  node.style.opacity = '0'
   node.style.pointerEvents = 'none'
   node.style.userSelect = 'none'
+  node.style.visibility = 'hidden'
 }
 
 export function init(options: InitOptions): void {

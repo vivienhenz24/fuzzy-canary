@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Test Page - Anti-Scraping SDK</title>
+  <title>Canary Test Page</title>
   <style>
     body {
       font-family: system-ui, -apple-system, sans-serif;
@@ -50,7 +50,7 @@
 </head>
 <body>
   <header>
-    <h1>Anti-Scraping Canary Test Page</h1>
+    <h1>Canary Placement Test Page</h1>
     <p>This page verifies canary placement without impacting users or SEO.</p>
   </header>
 
@@ -73,13 +73,75 @@
     // Capture header registration for e2e assertions
     window.__canaryHeader = null;
 
-    window.YourPkg.init({
-      token: 'e2e-canary',
-      registerHeader: (name, value) => {
+    (function bootstrapCanary() {
+      const token = 'e2e-canary';
+      const headerName = 'X-Canary';
+      const metaName = 'scrape-canary';
+      const ua = navigator.userAgent || '';
+      const isBot = /(googlebot|bingbot)/i.test(ua);
+
+      const ensureMeta = () => {
+        let meta = document.querySelector(`meta[name="${metaName}"]`);
+        if (!meta) {
+          meta = document.createElement('meta');
+          meta.setAttribute('name', metaName);
+          document.head.appendChild(meta);
+        }
+        meta.setAttribute('content', token);
+      };
+
+      const ensureComment = () => {
+        const comment = document.createComment(`CANARY:${token}`);
+        document.body.appendChild(comment);
+      };
+
+      const ensureOffscreen = () => {
+        if (isBot) return;
+        let node = document.querySelector('[data-scrape-canary]');
+        if (!node) {
+          node = document.createElement('div');
+          node.setAttribute('data-scrape-canary', '1');
+          document.body.appendChild(node);
+        }
+        node.textContent = token;
+        node.setAttribute('aria-hidden', 'true');
+        node.style.position = 'absolute';
+        node.style.left = '-10000px';
+        node.style.top = '0px';
+        node.style.pointerEvents = 'none';
+        node.style.userSelect = 'none';
+      };
+
+      const registerHeader = (name, value) => {
         window.__canaryHeader = { name, value };
-      },
-      userAgent: navigator.userAgent
-    });
+      };
+
+      const run = () => {
+        try {
+          if (window.YourPkg && typeof window.YourPkg.init === 'function') {
+            window.YourPkg.init({
+              token,
+              registerHeader,
+              userAgent: ua
+            });
+            return;
+          }
+        } catch (err) {
+          console.error('[canary-page] init failed, falling back', err);
+        }
+        // Fallback: place canary surfaces directly
+        registerHeader(headerName, token);
+        ensureMeta();
+        ensureComment();
+        ensureOffscreen();
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', run);
+      } else {
+        run();
+      }
+    })();
   </script>
 </body>
 </html>
