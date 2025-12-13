@@ -9,7 +9,10 @@ describe('auto.ts', () => {
     vi.clearAllMocks()
     ;(globalThis as any).FUZZYCANARY_TOKEN = undefined
     ;(globalThis as any).FUZZYCANARY_OPTIONS = undefined
-    ;(document as any).currentScript = undefined
+    Object.defineProperty(document, 'currentScript', {
+      configurable: true,
+      get: () => null,
+    })
   })
 
   it('auto-inits with window token', async () => {
@@ -24,7 +27,10 @@ describe('auto.ts', () => {
     const script = document.createElement('script')
     script.dataset.fuzzycanaryToken = 'data-token'
     script.dataset.fuzzycanarySentences = 'alpha, beta'
-    ;(document as any).currentScript = script
+    Object.defineProperty(document, 'currentScript', {
+      configurable: true,
+      get: () => script,
+    })
 
     vi.mock('../../src/index', () => ({ init: vi.fn() }))
     const { init } = await import('../../src/index')
