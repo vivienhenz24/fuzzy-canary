@@ -74,8 +74,6 @@ const resolveOptions = (): InitOptions | null => {
   const token = win.token || data.token || env.token
   const sentences = win.sentences || data.sentences
 
-  if (!token && (!sentences || sentences.length === 0)) return null
-
   return {
     token,
     headerName: win.headerName || data.headerName || env.headerName,
@@ -94,15 +92,7 @@ const resolveOptions = (): InitOptions | null => {
 
 const run = (): void => {
   const options = resolveOptions()
-  if (!options) {
-    if (typeof console !== 'undefined' && typeof console.warn === 'function') {
-      console.warn(
-        '[fuzzycanary] No payload found for auto init. Set FUZZYCANARY_TOKEN, NEXT_PUBLIC_FUZZYCANARY_TOKEN, window.FUZZYCANARY_TOKEN, data-fuzzycanary-token, or provide sentences.'
-      )
-    }
-    return
-  }
-  init(options)
+  init(options || {})
 }
 
 if (!globalAny[AUTO_INIT_FLAG]) {

@@ -11,8 +11,20 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       include: ['src/**/*.ts'],
-      exclude: ['src/**/*.test.ts', 'tests/**']
-    }
-  }
+      exclude: ['src/**/*.test.ts', 'tests/**'],
+    },
+  },
+  plugins: [
+    {
+      name: 'yaml-as-text',
+      transform(code, id) {
+        if (id.endsWith('.yaml')) {
+          return {
+            code: `export default ${JSON.stringify(code)};`,
+            map: null,
+          }
+        }
+      },
+    },
+  ],
 })
-

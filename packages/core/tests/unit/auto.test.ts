@@ -30,13 +30,6 @@ describe('auto.ts', () => {
     expect(init).toHaveBeenCalledWith(expect.objectContaining({ token: 'win-token' }))
   })
 
-  it('warns when no token is found', async () => {
-    const warnSpy = vi.spyOn(console, 'warn')
-    vi.mock('../../src/index', () => ({ init: vi.fn() }))
-    await import('../../src/auto')
-    expect(warnSpy).toHaveBeenCalled()
-  })
-
   it('auto-inits with sentences even if token is absent', async () => {
     const warnSpy = vi.spyOn(console, 'warn')
     ;(globalThis as any).FUZZYCANARY_OPTIONS = { sentences: ['hello world'] }
@@ -44,6 +37,15 @@ describe('auto.ts', () => {
     const { init } = await import('../../src/index')
     await import('../../src/auto')
     expect(init).toHaveBeenCalledWith(expect.objectContaining({ sentences: ['hello world'] }))
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
+
+  it('falls back to defaults when no token or sentences are provided', async () => {
+    const warnSpy = vi.spyOn(console, 'warn')
+    vi.mock('../../src/index', () => ({ init: vi.fn() }))
+    const { init } = await import('../../src/index')
+    await import('../../src/auto')
+    expect(init).toHaveBeenCalled()
     expect(warnSpy).not.toHaveBeenCalled()
   })
 })

@@ -115,4 +115,15 @@ describe('index.ts - canary placement strategy', () => {
     const comments = collectComments().join(' ')
     expect(comments).toContain('lorem ipsum')
   })
+
+  it('falls back to bundled sentences when nothing is provided', async () => {
+    const registerHeader = vi.fn()
+    vi.spyOn(Math, 'random').mockReturnValue(0) // pick first sentence deterministically
+    init({ registerHeader })
+    await waitForDOMUpdate()
+
+    expect(registerHeader).not.toHaveBeenCalled()
+    const offscreen = document.querySelector('[data-scrape-canary]')
+    expect(offscreen?.textContent).toContain('Silent foxes guard forgotten libraries at dawn.')
+  })
 })

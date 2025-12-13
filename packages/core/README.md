@@ -1,6 +1,6 @@
 # @fuzzycanary/core
 
-Client-side SDK that plants a hidden DOM payload for scraper canaries. It injects text that is invisible to humans but readable by bots, and can register a custom header + meta tag for downstream detection. You can use a token, pre-written sentences, or both.
+Client-side SDK that plants a hidden DOM payload for scraper canaries. It injects text that is invisible to humans but readable by bots, and can register a custom header + meta tag for downstream detection. You can use a token, pre-written sentences, or both. If you provide neither, it will pick a bundled random sentence.
 
 ## Install
 
@@ -16,7 +16,7 @@ npm install @fuzzycanary/core
 import { init } from '@fuzzycanary/core'
 
 init({
-  token: 'canary-token', // optional if you provide sentences
+  token: 'canary-token', // optional if you provide sentences (or let the default random sentence be used)
   sentences: ['do not crawl', 'internal use only'], // optional text to hide
   headerName: 'X-Canary', // optional, default "X-Canary"
   metaName: 'scrape-canary', // optional, default "scrape-canary"
@@ -51,3 +51,5 @@ Auto init looks for a token in this order:
 - `process.env.FUZZYCANARY_TOKEN` or `process.env.NEXT_PUBLIC_FUZZYCANARY_TOKEN`
 
 Optional names can be set via `window.FUZZYCANARY_OPTIONS`, data attributes (`data-fuzzycanary-header`, `data-fuzzycanary-meta`, `data-fuzzycanary-skip-bots`), or env vars (`FUZZYCANARY_HEADER`, `FUZZYCANARY_META`, `FUZZYCANARY_SKIP_BOTS`).
+
+If you omit both token and sentences, the SDK picks a random bundled sentence from `src/sentences.yaml` to keep crawlers busy with zero setup.

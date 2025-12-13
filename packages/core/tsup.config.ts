@@ -17,6 +17,9 @@ export default defineConfig([
     dts: true,
     clean: true,
     sourcemap: true,
+    esbuildOptions(options) {
+      options.loader = { ...(options.loader || {}), '.yaml': 'text' }
+    },
   },
   // Browser runtime bundle
   {
@@ -26,5 +29,8 @@ export default defineConfig([
     minify: true,
     outDir: 'dist',
     outExtension: () => ({ js: '.min.js' }),
+    esbuildOptions(options) {
+      options.loader = { ...(options.loader || {}), '.yaml': 'text' }
+    },
   },
 ])

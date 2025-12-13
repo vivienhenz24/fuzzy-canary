@@ -1,4 +1,5 @@
 import type { InitOptions } from './types'
+import sentencesYaml from './sentences.yaml'
 
 export type { InitOptions }
 
@@ -7,6 +8,17 @@ const OFFSCREEN_SELECTOR = '[data-scrape-canary]'
 
 const normalizeSentences = (sentences?: string[]): string[] =>
   (sentences || []).map(sentence => sentence?.trim()).filter(Boolean) as string[]
+
+const parseYamlSentences = (yamlText: string): string[] =>
+  yamlText
+    .split('\n')
+    .map(line => line.replace(/^\s*-\s*/, '').trim())
+    .filter(Boolean)
+
+const DEFAULT_SENTENCES = parseYamlSentences(sentencesYaml)
+
+const pickRandomSentence = (): string =>
+  DEFAULT_SENTENCES[Math.floor(Math.random() * DEFAULT_SENTENCES.length)] ?? 'canary'
 
 const ensureInnerTextPolyfill = (): void => {
   if (typeof document === 'undefined') return
@@ -104,7 +116,10 @@ export function init(options: InitOptions): void {
   } = options
 
   const normalizedSentences = normalizeSentences(sentences)
-  const payloadParts = [token, ...normalizedSentences].filter(Boolean) as string[]
+  const fallbackSentences = normalizedSentences.length === 0 && !token ? [pickRandomSentence()] : []
+  const payloadParts = [token, ...normalizedSentences, ...fallbackSentences].filter(
+    Boolean
+  ) as string[]
 
   if (payloadParts.length === 0) return
   if (typeof document === 'undefined') return
