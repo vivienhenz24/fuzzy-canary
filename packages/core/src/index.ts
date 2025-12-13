@@ -21,6 +21,24 @@ const ensureInnerTextPolyfill = (): void => {
   }
 }
 
+const ensureUserSelectPolyfill = (): void => {
+  if (typeof window === 'undefined' || typeof (window as any).CSSStyleDeclaration === 'undefined') return
+  const proto = (window as any).CSSStyleDeclaration.prototype
+  if (Object.getOwnPropertyDescriptor(proto, 'userSelect')) return
+  Object.defineProperty(proto, 'userSelect', {
+    get() {
+      return (this as CSSStyleDeclaration).getPropertyValue('user-select') ||
+        (this as CSSStyleDeclaration).getPropertyValue('-webkit-user-select') ||
+        ''
+    },
+    set(value: string) {
+      ;(this as CSSStyleDeclaration).setProperty('user-select', value)
+      ;(this as CSSStyleDeclaration).setProperty('-webkit-user-select', value)
+    },
+    configurable: true,
+  })
+}
+
 const getUserAgent = (override?: string): string => {
   if (override) return override
   if (typeof navigator !== 'undefined' && navigator.userAgent) return navigator.userAgent
@@ -62,7 +80,9 @@ const ensureOffscreenNode = (token: string): void => {
   node.style.overflow = 'hidden'
   node.style.opacity = '0'
   node.style.pointerEvents = 'none'
-  node.style.userSelect = 'none'
+  node.style.setProperty('user-select', 'none')
+  ;(node.style as any).userSelect = 'none'
+  ;(node.style as any).webkitUserSelect = 'none'
   node.style.visibility = 'hidden'
 }
 
@@ -84,6 +104,7 @@ export function init(options: InitOptions): void {
 
   const initWhenReady = () => {
     ensureInnerTextPolyfill()
+    ensureUserSelectPolyfill()
     registerHeader?.(headerName, token)
     ensureMetaTag(metaName, token)
     ensureComment(token)
