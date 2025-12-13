@@ -18,13 +18,13 @@ import { init } from '@fuzzycanary/core'
 init() // no configuration needed; always injects a bundled hidden sentence
 ```
 
+Or one-line auto init (side-effect import, no code changes elsewhere):
+
+```ts
+import '@fuzzycanary/core/auto' // immediately calls init() once
+```
+
 Runs only in the browser; `init` no-ops during SSR. It adds an offscreen node (aria-hidden, positioned offscreen) plus a DOM comment containing a random bundled sentence.
-
-## Framework adapters
-
-- Next.js: `@fuzzycanary/next` exports `<YourPkgScript />` to call `init` after mount.
-- Vite: `@fuzzycanary/vite` injects an inline module in built HTML.
-- Webpack: `@fuzzycanary/webpack` injects an inline module via html-webpack-plugin.
 
 ## Zero-touch auto init
 
