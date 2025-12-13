@@ -6,7 +6,7 @@
  * This file is bundled into runtime.min.js for CDN distribution.
  */
 
-import { init } from '@/index'
+import { init } from './index'
 
 // Expose to global scope for browser usage
 if (typeof window !== 'undefined') {
