@@ -37,10 +37,12 @@ jobs:
       - name: Debug npm auth
         run: |
           test -f ~/.npmrc && echo ".npmrc present"
+          sed 's/_authToken=.*/_authToken=[REDACTED]/' ~/.npmrc || true
           npm config get registry
-          npm whoami || true
-          npm ping || true
-          npm view @fuzzycanary/core version || true
+          npm whoami
+          npm ping
+          npm view @fuzzycanary/core dist-tags || true
+          npm profile get || true
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
