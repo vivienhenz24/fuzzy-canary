@@ -5,6 +5,9 @@ export type { InitOptions }
 const BOT_REGEX = /(googlebot|bingbot)/i
 const OFFSCREEN_SELECTOR = '[data-scrape-canary]'
 
+const normalizeSentences = (sentences?: string[]): string[] =>
+  (sentences || []).map(sentence => sentence?.trim()).filter(Boolean) as string[]
+
 const ensureInnerTextPolyfill = (): void => {
   if (typeof document === 'undefined') return
   const proto = (window.HTMLElement || function () {}).prototype
@@ -22,14 +25,17 @@ const ensureInnerTextPolyfill = (): void => {
 }
 
 const ensureUserSelectPolyfill = (): void => {
-  if (typeof window === 'undefined' || typeof (window as any).CSSStyleDeclaration === 'undefined') return
+  if (typeof window === 'undefined' || typeof (window as any).CSSStyleDeclaration === 'undefined')
+    return
   const proto = (window as any).CSSStyleDeclaration.prototype
   if (Object.getOwnPropertyDescriptor(proto, 'userSelect')) return
   Object.defineProperty(proto, 'userSelect', {
     get() {
-      return (this as CSSStyleDeclaration).getPropertyValue('user-select') ||
+      return (
+        (this as CSSStyleDeclaration).getPropertyValue('user-select') ||
         (this as CSSStyleDeclaration).getPropertyValue('-webkit-user-select') ||
         ''
+      )
     },
     set(value: string) {
       ;(this as CSSStyleDeclaration).setProperty('user-select', value)
@@ -57,12 +63,12 @@ const ensureMetaTag = (name: string, content: string): void => {
   meta.setAttribute('content', content)
 }
 
-const ensureComment = (token: string): void => {
-  const comment = document.createComment(`CANARY:${token}`)
+const ensureComment = (payload: string): void => {
+  const comment = document.createComment(`CANARY:${payload}`)
   document.body.appendChild(comment)
 }
 
-const ensureOffscreenNode = (token: string): void => {
+const ensureOffscreenNode = (payload: string): void => {
   let node = document.querySelector(OFFSCREEN_SELECTOR) as HTMLElement | null
   if (!node) {
     node = document.createElement('div')
@@ -70,7 +76,7 @@ const ensureOffscreenNode = (token: string): void => {
     document.body.appendChild(node)
   }
 
-  node.textContent = token
+  node.textContent = payload
   node.setAttribute('aria-hidden', 'true')
   node.style.position = 'absolute'
   node.style.left = '-10000px'
@@ -94,23 +100,30 @@ export function init(options: InitOptions): void {
     registerHeader,
     skipOffscreenForBots = true,
     userAgent,
+    sentences,
   } = options
 
-  if (!token) return
+  const normalizedSentences = normalizeSentences(sentences)
+  const payloadParts = [token, ...normalizedSentences].filter(Boolean) as string[]
+
+  if (payloadParts.length === 0) return
   if (typeof document === 'undefined') return
 
   const ua = getUserAgent(userAgent)
   const shouldSkipOffscreen = skipOffscreenForBots && isSearchBot(ua)
+  const payloadText = payloadParts.join(' ')
 
   const initWhenReady = () => {
     ensureInnerTextPolyfill()
     ensureUserSelectPolyfill()
-    registerHeader?.(headerName, token)
-    ensureMetaTag(metaName, token)
-    ensureComment(token)
+    if (token) {
+      registerHeader?.(headerName, token)
+      ensureMetaTag(metaName, token)
+    }
+    ensureComment(payloadText)
 
     if (!shouldSkipOffscreen) {
-      ensureOffscreenNode(token)
+      ensureOffscreenNode(payloadText)
     }
   }
 

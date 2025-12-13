@@ -9,6 +9,14 @@ const parseBoolean = (value: string | undefined): boolean | undefined => {
   return value === 'true' || value === '1'
 }
 
+const parseList = (value: string | undefined): string[] | undefined => {
+  if (!value) return undefined
+  return value
+    .split(',')
+    .map(item => item.trim())
+    .filter(Boolean)
+}
+
 const readEnv = (): Partial<InitOptions> => {
   if (typeof process === 'undefined' || !process.env) return {}
   const {
@@ -41,14 +49,20 @@ const readDataAttributes = (): Partial<InitOptions> => {
   const script = document.currentScript as HTMLScriptElement | null
   if (!script?.dataset) return {}
 
-  const { fuzzycanaryToken, fuzzycanaryHeader, fuzzycanaryMeta, fuzzycanarySkipBots } =
-    script.dataset
+  const {
+    fuzzycanaryToken,
+    fuzzycanaryHeader,
+    fuzzycanaryMeta,
+    fuzzycanarySkipBots,
+    fuzzycanarySentences,
+  } = script.dataset
 
   return {
     token: fuzzycanaryToken,
     headerName: fuzzycanaryHeader,
     metaName: fuzzycanaryMeta,
     skipOffscreenForBots: parseBoolean(fuzzycanarySkipBots),
+    sentences: parseList(fuzzycanarySentences),
   }
 }
 
@@ -58,8 +72,9 @@ const resolveOptions = (): InitOptions | null => {
   const data = readDataAttributes()
 
   const token = win.token || data.token || env.token
+  const sentences = win.sentences || data.sentences
 
-  if (!token) return null
+  if (!token && (!sentences || sentences.length === 0)) return null
 
   return {
     token,
@@ -72,6 +87,7 @@ const resolveOptions = (): InitOptions | null => {
           ? data.skipOffscreenForBots
           : env.skipOffscreenForBots,
     registerHeader: win.registerHeader,
+    sentences,
     userAgent: win.userAgent,
   }
 }
@@ -81,7 +97,7 @@ const run = (): void => {
   if (!options) {
     if (typeof console !== 'undefined' && typeof console.warn === 'function') {
       console.warn(
-        '[fuzzycanary] No token found for auto init. Set FUZZYCANARY_TOKEN, NEXT_PUBLIC_FUZZYCANARY_TOKEN, window.FUZZYCANARY_TOKEN, or data-fuzzycanary-token.'
+        '[fuzzycanary] No payload found for auto init. Set FUZZYCANARY_TOKEN, NEXT_PUBLIC_FUZZYCANARY_TOKEN, window.FUZZYCANARY_TOKEN, data-fuzzycanary-token, or provide sentences.'
       )
     }
     return

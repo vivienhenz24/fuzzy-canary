@@ -2,9 +2,10 @@ import { describe, it, expect } from 'vitest'
 import type { InitOptions } from '../../src/types'
 
 describe('types.ts - InitOptions', () => {
-  it('requires a token and supports header/meta configuration hooks', () => {
+  it('supports tokens, sentences, and header/meta configuration hooks', () => {
     const validOptions: InitOptions = {
       token: 'canary-123',
+      sentences: ['one sentence', 'another sentence'],
       headerName: 'X-Canary',
       metaName: 'scrape-canary',
       registerHeader: (_name: string, _value: string) => {},

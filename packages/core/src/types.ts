@@ -1,27 +1,33 @@
 export interface InitOptions {
   /** Canary token to inject across all surfaces */
-  token: string;
+  token?: string
+
+  /**
+   * Optional pre-written sentences to hide alongside the token.
+   * Joined with spaces and placed in the off-screen node and comment.
+   */
+  sentences?: string[]
 
   /** HTTP response header name for the canary. Default: X-Canary */
-  headerName?: string;
+  headerName?: string
 
   /** Meta tag name for the canary. Default: scrape-canary */
-  metaName?: string;
+  metaName?: string
 
   /**
    * Hook that allows the host environment to register a header
    * (e.g., on the server response) since client JS cannot set response headers.
    */
-  registerHeader?: (name: string, value: string) => void;
+  registerHeader?: (name: string, value: string) => void
 
   /**
    * Skip rendering the off-screen text node when the user agent is a search bot.
    * Default: true
    */
-  skipOffscreenForBots?: boolean;
+  skipOffscreenForBots?: boolean
 
   /**
    * Optional userAgent override for bot detection. If omitted, navigator.userAgent is used.
    */
-  userAgent?: string;
+  userAgent?: string
 }

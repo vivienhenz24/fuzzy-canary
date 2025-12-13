@@ -6,4 +6,4 @@ An open-source, installable client-side SDK that adds a hidden text payload into
 
 ## Installation
 
-Install from npm: [@fuzzycanary/core](https://www.npmjs.com/package/@fuzzycanary/core)
+[![npm](https://img.shields.io/npm/v/@fuzzycanary/core)](https://www.npmjs.com/package/@fuzzycanary/core)
