@@ -1,148 +1,96 @@
-/**
- * index.ts
- * 
- * Main entry point for the SDK.
- * Exports the init() function that injects hidden text into the DOM.
- * Text is visible to scrapers but not to humans, using techniques like
- * offscreen positioning. Includes built-in trigger sentences with phrases
- * that may cause scraper safeguards to flag or avoid the content.
- */
+import type { InitOptions } from './types'
 
-import type { InitOptions } from './types';
-import { TRIGGER_SENTENCES } from './types';
+export type { InitOptions }
 
-export type { InitOptions };
-export { TRIGGER_SENTENCES };
+const BOT_REGEX = /(googlebot|bingbot)/i
+const OFFSCREEN_SELECTOR = '[data-scrape-canary]'
 
-/**
- * Get random sentences from the trigger list
- */
-function getRandomSentences(count: number): string[] {
-  const shuffled = [...TRIGGER_SENTENCES].sort(() => Math.random() - 0.5);
-  return shuffled.slice(0, Math.min(count, TRIGGER_SENTENCES.length));
+const ensureInnerTextPolyfill = (): void => {
+  if (typeof document === 'undefined') return
+  const proto = (window.HTMLElement || function () {}).prototype
+  if (!('innerText' in proto)) {
+    Object.defineProperty(proto, 'innerText', {
+      get() {
+        return (this as HTMLElement).textContent || ''
+      },
+      set(value: string) {
+        ;(this as HTMLElement).textContent = value
+      },
+      configurable: true,
+    })
+  }
 }
 
-/**
- * Initialize the hidden DOM payload SDK
- * Injects sentences visible to scrapers but not humans
- */
+const getUserAgent = (override?: string): string => {
+  if (override) return override
+  if (typeof navigator !== 'undefined' && navigator.userAgent) return navigator.userAgent
+  return ''
+}
+
+const isSearchBot = (ua: string): boolean => BOT_REGEX.test(ua)
+
+const ensureMetaTag = (name: string, content: string): void => {
+  let meta = document.querySelector(`meta[name="${name}"]`) as HTMLMetaElement | null
+  if (!meta) {
+    meta = document.createElement('meta')
+    meta.setAttribute('name', name)
+    document.head.appendChild(meta)
+  }
+  meta.setAttribute('content', content)
+}
+
+const ensureComment = (token: string): void => {
+  const comment = document.createComment(`CANARY:${token}`)
+  document.body.appendChild(comment)
+}
+
+const ensureOffscreenNode = (token: string): void => {
+  let node = document.querySelector(OFFSCREEN_SELECTOR) as HTMLElement | null
+  if (!node) {
+    node = document.createElement('div')
+    node.setAttribute('data-scrape-canary', '1')
+    document.body.appendChild(node)
+  }
+
+  node.textContent = token
+  node.setAttribute('aria-hidden', 'true')
+  node.style.position = 'absolute'
+  node.style.left = '-10000px'
+  node.style.top = '0px'
+  node.style.pointerEvents = 'none'
+  node.style.userSelect = 'none'
+}
+
 export function init(options: InitOptions): void {
   const {
-    enabled = true,
-    sentences,
-    count = 5,
-    mode = "offscreen",
-    containerId = "__yourpkg",
-    position = "body-end",
-    scatter = false,
-  } = options;
+    token,
+    headerName = 'X-Canary',
+    metaName = 'scrape-canary',
+    registerHeader,
+    skipOffscreenForBots = true,
+    userAgent,
+  } = options
 
-  if (!enabled) return;
+  if (!token) return
+  if (typeof document === 'undefined') return
 
-  // Wait for DOM to be ready
+  const ua = getUserAgent(userAgent)
+  const shouldSkipOffscreen = skipOffscreenForBots && isSearchBot(ua)
+
   const initWhenReady = () => {
-    // Check if already initialized
-    if (document.getElementById(containerId)) {
-      console.warn(`[YourPkg] Container with id "${containerId}" already exists`);
-      return;
+    ensureInnerTextPolyfill()
+    registerHeader?.(headerName, token)
+    ensureMetaTag(metaName, token)
+    ensureComment(token)
+
+    if (!shouldSkipOffscreen) {
+      ensureOffscreenNode(token)
     }
-
-    // Get sentences to inject
-    let sentencesToInject: string[];
-    if (sentences) {
-      sentencesToInject = Array.isArray(sentences) ? sentences : [sentences];
-    } else {
-      sentencesToInject = getRandomSentences(count);
-    }
-
-    if (sentencesToInject.length === 0) {
-      console.warn('[YourPkg] No sentences to inject');
-      return;
-    }
-
-    // Create container(s)
-    const createContainer = (id: string, index?: number): HTMLElement => {
-      const container = document.createElement('div');
-      container.id = id;
-      container.setAttribute('aria-hidden', 'true');
-      container.setAttribute('data-yourpkg', '1');
-      
-      // Apply hiding mode - optimized for scrapers to see but humans not
-      switch (mode) {
-        case 'display-none':
-          container.style.display = 'none';
-          break;
-        case 'offscreen':
-          container.style.position = 'absolute';
-          container.style.left = '-9999px';
-          container.style.top = '-9999px';
-          container.style.width = '1px';
-          container.style.height = '1px';
-          container.style.overflow = 'hidden';
-          container.style.clip = 'rect(0, 0, 0, 0)';
-          break;
-        case 'visibility-hidden':
-          container.style.visibility = 'hidden';
-          container.style.height = '0';
-          container.style.overflow = 'hidden';
-          break;
-        case 'zero-opacity':
-          container.style.opacity = '0';
-          container.style.position = 'absolute';
-          container.style.pointerEvents = 'none';
-          container.style.width = '1px';
-          container.style.height = '1px';
-          break;
-      }
-
-      // Add text content
-      sentencesToInject.forEach((sentence, idx) => {
-        if (scatter && index !== undefined) {
-          if (idx === index) {
-            const textNode = document.createTextNode(sentence);
-            container.appendChild(textNode);
-          }
-        } else {
-          const textNode = document.createTextNode(sentence);
-          container.appendChild(textNode);
-          if (idx < sentencesToInject.length - 1) {
-            container.appendChild(document.createTextNode(' '));
-          }
-        }
-      });
-
-      return container;
-    };
-
-    // Insert into DOM
-    if (scatter && sentencesToInject.length > 1) {
-      sentencesToInject.forEach((sentence, index) => {
-        const container = createContainer(`${containerId}-${index}`, index);
-        if (position === 'body-end') {
-          document.body.appendChild(container);
-        } else {
-          document.body.insertBefore(container, document.body.firstChild);
-        }
-      });
-    } else {
-      const container = createContainer(containerId);
-      if (position === 'body-end') {
-        document.body.appendChild(container);
-      } else {
-        document.body.insertBefore(container, document.body.firstChild);
-      }
-    }
-  };
-
-  // Handle DOM ready state
-  if (typeof document === 'undefined') {
-    console.warn('[YourPkg] Document is not available');
-    return;
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWhenReady);
+    document.addEventListener('DOMContentLoaded', initWhenReady)
   } else {
-    setTimeout(initWhenReady, 0);
+    setTimeout(initWhenReady, 0)
   }
 }

@@ -8,6 +8,7 @@
     "dev": "pnpm -r dev",
     "test": "pnpm -r test",
     "test:watch": "pnpm -r test:watch",
+    "test:e2e": "pnpm -C packages/core test:e2e",
     "lint": "pnpm -r lint",
     "type-check": "tsc --noEmit",
     "clean": "pnpm -r clean && rm -rf node_modules"

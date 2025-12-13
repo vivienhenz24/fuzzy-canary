@@ -1,263 +1,102 @@
-/**
- * Unit tests for index.ts
- * Tests the init() function and all its options
- */
-
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { init, TRIGGER_SENTENCES } from '../../src/index'
-import { waitForDOMUpdate } from '../setup'
+import { init } from '../../src/index'
+import { waitForDOMUpdate, setUserAgent } from '../setup'
 
-describe('index.ts - init()', () => {
+const CANARY_TOKEN = 'canary-token-123'
+const collectComments = () => {
+  const comments: string[] = []
+  const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null)
+  let node = walker.nextNode()
+  while (node) {
+    comments.push((node as Comment).data)
+    node = walker.nextNode()
+  }
+  return comments
+}
+
+describe('index.ts - canary placement strategy', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
+    document.head.innerHTML = ''
     vi.clearAllMocks()
+    setUserAgent('Mozilla/5.0 (jsdom)')
   })
 
-  describe('Basic functionality', () => {
-    it('should export init function', () => {
-      expect(init).toBeDefined()
-      expect(typeof init).toBe('function')
-    })
+  it('calls registerHeader hook so the host can set X-Canary response header', async () => {
+    const registerHeader = vi.fn()
 
-    it('should export TRIGGER_SENTENCES', () => {
-      expect(TRIGGER_SENTENCES).toBeDefined()
-      expect(Array.isArray(TRIGGER_SENTENCES)).toBe(true)
-    })
+    init({ token: CANARY_TOKEN, registerHeader })
+    await waitForDOMUpdate()
 
-    it('should inject container with default options', async () => {
-      init({ sentences: 'Test sentence' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container).toBeTruthy()
-    })
-
-    it('should inject text content', async () => {
-      const testSentence = 'This is a test sentence.'
-      init({ sentences: testSentence })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container?.textContent).toBe(testSentence)
-    })
+    expect(registerHeader).toHaveBeenCalledWith('X-Canary', CANARY_TOKEN)
   })
 
-  describe('enabled option', () => {
-    it('should not inject when enabled is false', async () => {
-      init({ sentences: 'Test', enabled: false })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container).toBeNull()
-    })
+  it('adds a scrape-canary meta tag with the token', async () => {
+    init({ token: CANARY_TOKEN })
+    await waitForDOMUpdate()
 
-    it('should inject when enabled is true', async () => {
-      init({ sentences: 'Test', enabled: true })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container).toBeTruthy()
-    })
+    const meta = document.querySelector('meta[name="scrape-canary"]')
+    expect(meta).toBeTruthy()
+    expect(meta?.getAttribute('content')).toBe(CANARY_TOKEN)
   })
 
-  describe('sentences option', () => {
-    it('should accept string sentence', async () => {
-      init({ sentences: 'Single sentence' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container?.textContent).toBe('Single sentence')
-    })
+  it('injects an HTML comment containing the canary token', async () => {
+    init({ token: CANARY_TOKEN })
+    await waitForDOMUpdate()
 
-    it('should accept array of sentences', async () => {
-      init({ sentences: ['Sentence 1', 'Sentence 2'] })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      const text = container?.textContent || ''
-      expect(text).toContain('Sentence 1')
-      expect(text).toContain('Sentence 2')
-    })
+    const comments = collectComments().join(' ')
 
-    it('should use random trigger sentences when not provided', async () => {
-      init({ count: 3 })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container?.textContent).toBeTruthy()
-      expect(container?.textContent?.length).toBeGreaterThan(10)
-    })
+    expect(comments).toContain('CANARY')
+    expect(comments).toContain(CANARY_TOKEN)
   })
 
-  describe('mode option', () => {
-    it('should apply display-none mode', async () => {
-      init({ sentences: 'Test', mode: 'display-none' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg') as HTMLElement
-      expect(container.style.display).toBe('none')
-    })
+  it('adds an off-screen element for innerText scrapers with safe styling and aria-hidden', async () => {
+    init({ token: CANARY_TOKEN })
+    await waitForDOMUpdate()
 
-    it('should apply offscreen mode', async () => {
-      init({ sentences: 'Test', mode: 'offscreen' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg') as HTMLElement
-      expect(container.style.position).toBe('absolute')
-      expect(container.style.left).toBe('-9999px')
-      expect(container.style.top).toBe('-9999px')
-    })
+    const canaryNode = document.querySelector('[data-scrape-canary]')
+    expect(canaryNode).toBeTruthy()
 
-    it('should apply visibility-hidden mode', async () => {
-      init({ sentences: 'Test', mode: 'visibility-hidden' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg') as HTMLElement
-      expect(container.style.visibility).toBe('hidden')
-    })
+    const element = canaryNode as HTMLElement
+    const styles = element.style
 
-    it('should apply zero-opacity mode', async () => {
-      init({ sentences: 'Test', mode: 'zero-opacity' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg') as HTMLElement
-      expect(container.style.opacity).toBe('0')
-    })
+    expect(styles.position).toBe('absolute')
+    expect(styles.left).toBe('-10000px')
+    expect(styles.top).toBe('0px')
+    expect(styles.pointerEvents).toBe('none')
+    expect(styles.userSelect).toBe('none')
+    expect(element.getAttribute('aria-hidden')).toBe('true')
+    expect(element.textContent).toBe(CANARY_TOKEN)
+
+    // Scrapers reading textContent should see the token
+    expect(document.body.textContent).toContain(CANARY_TOKEN)
   })
 
-  describe('containerId option', () => {
-    it('should use custom container ID', async () => {
-      init({ sentences: 'Test', containerId: 'custom-id' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('custom-id')
-      expect(container).toBeTruthy()
-    })
+  it('does not inject the rendered off-screen element for known search bots, but still sets non-visible canaries', async () => {
+    const registerHeader = vi.fn()
+    setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
 
-    it('should warn if container already exists', async () => {
-      const warnSpy = vi.spyOn(console, 'warn')
-      
-      init({ sentences: 'Test' })
-      await waitForDOMUpdate()
-      
-      init({ sentences: 'Test again' })
-      await waitForDOMUpdate()
-      
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('already exists')
-      )
-    })
+    init({ token: CANARY_TOKEN, registerHeader })
+    await waitForDOMUpdate()
+
+    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
+
+    const meta = document.querySelector('meta[name="scrape-canary"]')
+    expect(meta).toBeTruthy()
+    expect(meta?.getAttribute('content')).toBe(CANARY_TOKEN)
+
+    expect(collectComments().length).toBeGreaterThan(0)
+
+    expect(registerHeader).toHaveBeenCalledWith('X-Canary', CANARY_TOKEN)
   })
 
-  describe('position option', () => {
-    it('should append to body end by default', async () => {
-      document.body.innerHTML = '<div id="existing">Existing</div>'
-      init({ sentences: 'Test' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(document.body.lastElementChild).toBe(container)
-    })
+  it('keeps the canary token short and non-keyworded to avoid SEO penalties', async () => {
+    init({ token: CANARY_TOKEN })
+    await waitForDOMUpdate()
 
-    it('should prepend to body start', async () => {
-      document.body.innerHTML = '<div id="existing">Existing</div>'
-      init({ sentences: 'Test', position: 'body-start' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(document.body.firstElementChild).toBe(container)
-    })
-  })
-
-  describe('scatter option', () => {
-    it('should create multiple containers when scatter is true', async () => {
-      init({ 
-        sentences: ['Sentence 1', 'Sentence 2', 'Sentence 3'],
-        scatter: true 
-      })
-      await waitForDOMUpdate()
-      
-      const container0 = document.getElementById('__yourpkg-0')
-      const container1 = document.getElementById('__yourpkg-1')
-      const container2 = document.getElementById('__yourpkg-2')
-      
-      expect(container0).toBeTruthy()
-      expect(container1).toBeTruthy()
-      expect(container2).toBeTruthy()
-    })
-
-    it('should create single container when scatter is false', async () => {
-      init({ 
-        sentences: ['Sentence 1', 'Sentence 2'],
-        scatter: false 
-      })
-      await waitForDOMUpdate()
-      
-      const mainContainer = document.getElementById('__yourpkg')
-      const container0 = document.getElementById('__yourpkg-0')
-      
-      expect(mainContainer).toBeTruthy()
-      expect(container0).toBeNull()
-    })
-  })
-
-  describe('Accessibility attributes', () => {
-    it('should set aria-hidden attribute', async () => {
-      init({ sentences: 'Test' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container?.getAttribute('aria-hidden')).toBe('true')
-    })
-
-    it('should set data-yourpkg attribute', async () => {
-      init({ sentences: 'Test' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container?.getAttribute('data-yourpkg')).toBe('1')
-    })
-  })
-
-  describe('DOM ready state handling', () => {
-    it('should handle loading state with DOMContentLoaded', () => {
-      Object.defineProperty(document, 'readyState', {
-        writable: true,
-        value: 'loading'
-      })
-      
-      const addEventListenerSpy = vi.spyOn(document, 'addEventListener')
-      init({ sentences: 'Test' })
-      
-      expect(addEventListenerSpy).toHaveBeenCalledWith(
-        'DOMContentLoaded',
-        expect.any(Function)
-      )
-    })
-
-    it('should handle complete state with setTimeout', async () => {
-      Object.defineProperty(document, 'readyState', {
-        writable: true,
-        value: 'complete'
-      })
-      
-      init({ sentences: 'Test' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container).toBeTruthy()
-    })
-  })
-
-  describe('Edge cases', () => {
-    it('should warn when no sentences provided', async () => {
-      const warnSpy = vi.spyOn(console, 'warn')
-      init({ sentences: [], count: 0 })
-      await waitForDOMUpdate()
-      
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('No sentences')
-      )
-    })
+    const tokenText = document.body.textContent || ''
+    expect(CANARY_TOKEN.length).toBeLessThanOrEqual(32)
+    expect(CANARY_TOKEN).not.toMatch(/\s/)
+    expect(tokenText).not.toMatch(/copyright|legal|prohibited/i)
   })
 })

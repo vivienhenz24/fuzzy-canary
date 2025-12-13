@@ -1,186 +1,95 @@
-/**
- * Integration tests for the SDK
- * Tests all modules working together
- */
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { init } from '../../src/index'
+import { waitForDOMUpdate, setUserAgent } from '../setup'
 
-import { describe, it, expect, beforeEach } from 'vitest'
-import { init, TRIGGER_SENTENCES } from '../../src/index'
-import type { InitOptions } from '../../src/types'
-import { waitForDOMUpdate } from '../setup'
+const collectComments = () => {
+  const comments: string[] = []
+  const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null)
+  let node = walker.nextNode()
+  while (node) {
+    comments.push((node as Comment).data)
+    node = walker.nextNode()
+  }
+  return comments
+}
 
-describe('SDK Integration', () => {
+describe('SDK Integration - best-practice canary placement', () => {
   beforeEach(() => {
     document.body.innerHTML = ''
+    document.head.innerHTML = ''
+    setUserAgent('Mozilla/5.0 (jsdom)')
   })
 
-  describe('Type imports with implementation', () => {
-    it('should import types and implementation together', () => {
-      const options: InitOptions = {
-        sentences: 'Test',
-        mode: 'offscreen'
-      }
-      
-      expect(options).toBeDefined()
-      expect(init).toBeDefined()
-      expect(TRIGGER_SENTENCES).toBeDefined()
-    })
+  it('places the same canary token in header, meta, comment, and off-screen node', async () => {
+    const token = 'integration-canary'
+    const registerHeader = vi.fn()
+
+    init({ token, registerHeader })
+    await waitForDOMUpdate()
+
+    const meta = document.querySelector('meta[name="scrape-canary"]')
+    expect(meta?.getAttribute('content')).toBe(token)
+    expect(registerHeader).toHaveBeenCalledWith('X-Canary', token)
+
+    const commentText = collectComments().join(' ')
+    expect(commentText).toContain(token)
+
+    const offscreen = document.querySelector('[data-scrape-canary]') as HTMLElement | null
+    expect(offscreen).toBeTruthy()
+    expect(offscreen?.textContent).toBe(token)
+    expect(offscreen?.style.position).toBe('absolute')
+    expect(offscreen?.style.left).toBe('-10000px')
+    expect(offscreen?.style.top).toBe('0px')
+    expect(offscreen?.style.pointerEvents).toBe('none')
   })
 
-  describe('Full workflow', () => {
-    it('should complete full init workflow', async () => {
-      // Import types
-      const options: InitOptions = {
-        sentences: ['Integration test sentence 1', 'Integration test sentence 2'],
-        mode: 'display-none',
-        position: 'body-end'
-      }
-      
-      // Call init
-      init(options)
-      await waitForDOMUpdate()
-      
-      // Verify DOM changes
-      const container = document.getElementById('__yourpkg')
-      expect(container).toBeTruthy()
-      expect(container?.getAttribute('aria-hidden')).toBe('true')
-      expect(container?.getAttribute('data-yourpkg')).toBe('1')
-      expect(container?.style.display).toBe('none')
-      expect(container?.textContent).toContain('Integration test sentence 1')
-      expect(container?.textContent).toContain('Integration test sentence 2')
-    })
+  it('exposes content to scrapers via textContent but keeps it out of visual flow', async () => {
+    const token = 'integration-canary'
+    init({ token })
+    await waitForDOMUpdate()
 
-    it('should work with built-in trigger sentences', async () => {
-      init({ count: 5, mode: 'offscreen' })
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('__yourpkg')
-      expect(container).toBeTruthy()
-      
-      const text = container?.textContent || ''
-      expect(text.length).toBeGreaterThan(50) // Should have substantial content
-      
-      // Should contain some trigger keywords
-      const lowerText = text.toLowerCase()
-      const hasKeywords = ['scraping', 'prohibited', 'copyright', 'unauthorized']
-        .some(keyword => lowerText.includes(keyword))
-      expect(hasKeywords).toBe(true)
-    })
+    const offscreen = document.querySelector('[data-scrape-canary]') as HTMLElement
+    const beforeHeight = document.body.scrollHeight
+
+    // Should be in textContent for scrapers
+    expect(document.body.textContent).toContain(token)
+
+    // Off-screen element should not change layout meaningfully
+    const afterHeight = document.body.scrollHeight
+    expect(Math.abs(afterHeight - beforeHeight)).toBeLessThan(5)
+    expect(offscreen.getAttribute('aria-hidden')).toBe('true')
   })
 
-  describe('Runtime global exposure integration', () => {
-    it('should work when imported as runtime', async () => {
-      // Import runtime module
-      await import('../../src/runtime')
-      
-      // Should expose global
-      expect((window as any).YourPkg).toBeDefined()
-      expect((window as any).YourPkg.init).toBeDefined()
-      
-      // Should work when called via global
-      ;(window as any).YourPkg.init({
-        sentences: 'Runtime integration test',
-        mode: 'zero-opacity',
-        containerId: 'runtime-test'
-      })
-      
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('runtime-test')
-      expect(container).toBeTruthy()
-      expect(container?.textContent).toBe('Runtime integration test')
-      expect(container?.style.opacity).toBe('0')
-    })
+  it('skips rendering the off-screen node for search bots but still leaves header/meta/comment breadcrumbs', async () => {
+    const token = 'integration-canary'
+    const registerHeader = vi.fn()
+    setUserAgent('Mozilla/5.0 (compatible; Bingbot/2.0; +http://www.bing.com/bingbot.htm)')
+
+    init({ token, registerHeader })
+    await waitForDOMUpdate()
+
+    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
+    expect(registerHeader).toHaveBeenCalledWith('X-Canary', token)
+    expect(document.querySelector('meta[name="scrape-canary"]')?.getAttribute('content')).toBe(token)
+
+    expect(collectComments().length).toBeGreaterThan(0)
   })
 
-  describe('Complex scenarios', () => {
-    it('should handle scatter mode with all hiding modes', async () => {
-      const sentences = [
-        'Scattered sentence 1',
-        'Scattered sentence 2',
-        'Scattered sentence 3'
-      ]
-      
-      init({
-        sentences,
-        scatter: true,
-        mode: 'offscreen',
-        position: 'body-start',
-        containerId: 'scatter-test'
-      })
-      
-      await waitForDOMUpdate()
-      
-      const container0 = document.getElementById('scatter-test-0')
-      const container1 = document.getElementById('scatter-test-1')
-      const container2 = document.getElementById('scatter-test-2')
-      
-      expect(container0).toBeTruthy()
-      expect(container1).toBeTruthy()
-      expect(container2).toBeTruthy()
-      
-      expect(container0?.textContent).toContain('Scattered sentence 1')
-      expect(container1?.textContent).toContain('Scattered sentence 2')
-      expect(container2?.textContent).toContain('Scattered sentence 3')
-      
-      // All should have offscreen positioning
-      expect(container0?.style.position).toBe('absolute')
-      expect(container1?.style.position).toBe('absolute')
-      expect(container2?.style.position).toBe('absolute')
-    })
+  it('does not inject keyword-stuffed visible text', async () => {
+    document.body.innerHTML = `
+      <main id="main-content">
+        <h1>Page Title</h1>
+        <p>Page content</p>
+      </main>
+    `
 
-    it('should verify content is hidden from humans but visible to scrapers', async () => {
-      init({
-        sentences: 'This content should be in textContent but not visible',
-        mode: 'offscreen',
-        containerId: 'scraper-test'
-      })
-      
-      await waitForDOMUpdate()
-      
-      const container = document.getElementById('scraper-test')
-      
-      // Should be in DOM and textContent (scrapers see this)
-      expect(container).toBeTruthy()
-      expect(document.body.textContent).toContain('This content should be in textContent but not visible')
-      
-      // Should not be visually rendered (humans don't see this)
-      expect(container?.style.position).toBe('absolute')
-      expect(container?.style.left).toBe('-9999px')
-      
-      // Should be hidden from accessibility tools
-      expect(container?.getAttribute('aria-hidden')).toBe('true')
-    })
+    const token = 'tiny-canary'
+    init({ token })
+    await waitForDOMUpdate()
 
-    it('should not interfere with existing page content', async () => {
-      // Add existing content
-      document.body.innerHTML = `
-        <header>Header</header>
-        <main id="main-content">
-          <h1>Page Title</h1>
-          <p>Page content</p>
-        </main>
-        <footer>Footer</footer>
-      `
-      
-      init({
-        sentences: 'Hidden anti-scraping content',
-        mode: 'display-none',
-        position: 'body-end',
-        containerId: 'no-interfere-test'
-      })
-      
-      await waitForDOMUpdate()
-      
-      // Main content should still be there
-      expect(document.getElementById('main-content')).toBeTruthy()
-      expect(document.querySelector('h1')?.textContent).toBe('Page Title')
-      
-      // Anti-scraping content should be added
-      const container = document.getElementById('no-interfere-test')
-      expect(container).toBeTruthy()
-      
-      // Should be at the end
-      expect(document.body.lastElementChild).toBe(container)
-    })
+    const visibleText = (document.body.innerText || '').toLowerCase()
+    expect(visibleText).not.toMatch(/copyright|legal|unauthorized|scraping/)
+    expect(visibleText).toContain('page title')
+    expect(visibleText).toContain('page content')
   })
 })

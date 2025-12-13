@@ -50,8 +50,8 @@
 </head>
 <body>
   <header>
-    <h1>Anti-Scraping SDK Test Page</h1>
-    <p>This page tests the hidden DOM payload injection.</p>
+    <h1>Anti-Scraping Canary Test Page</h1>
+    <p>This page verifies canary placement without impacting users or SEO.</p>
   </header>
 
   <main>
@@ -59,16 +59,6 @@
       <h2>Visible Content</h2>
       <p>This is the main content that users can see. It should remain visible and unaffected by the SDK.</p>
       <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
-    </div>
-
-    <div class="test-controls">
-      <h3>Test Controls</h3>
-      <button onclick="testDisplayNone()">Test: display-none</button>
-      <button onclick="testOffscreen()">Test: offscreen</button>
-      <button onclick="testZeroOpacity()">Test: zero-opacity</button>
-      <button onclick="testScatter()">Test: scatter mode</button>
-      <button onclick="clearContainers()">Clear All</button>
-      <div id="status"></div>
     </div>
   </main>
 
@@ -80,66 +70,16 @@
   <script src="./runtime.min.js"></script>
 
   <script>
-    function updateStatus(message) {
-      document.getElementById('status').innerHTML = `<strong>Status:</strong> ${message}`;
-    }
+    // Capture header registration for e2e assertions
+    window.__canaryHeader = null;
 
-    function clearContainers() {
-      // Remove all SDK containers
-      const containers = document.querySelectorAll('[data-yourpkg]');
-      containers.forEach(c => c.remove());
-      updateStatus('All containers cleared');
-    }
-
-    function testDisplayNone() {
-      clearContainers();
-      window.YourPkg.init({
-        sentences: ['Test sentence with display-none mode'],
-        mode: 'display-none',
-        containerId: 'test-display-none'
-      });
-      updateStatus('Injected with display-none mode. Check container in DevTools.');
-    }
-
-    function testOffscreen() {
-      clearContainers();
-      window.YourPkg.init({
-        sentences: ['Test sentence with offscreen mode'],
-        mode: 'offscreen',
-        containerId: 'test-offscreen'
-      });
-      updateStatus('Injected with offscreen mode. Check container in DevTools.');
-    }
-
-    function testZeroOpacity() {
-      clearContainers();
-      window.YourPkg.init({
-        sentences: ['Test sentence with zero-opacity mode'],
-        mode: 'zero-opacity',
-        containerId: 'test-opacity'
-      });
-      updateStatus('Injected with zero-opacity mode. Check container in DevTools.');
-    }
-
-    function testScatter() {
-      clearContainers();
-      window.YourPkg.init({
-        sentences: ['Scatter 1', 'Scatter 2', 'Scatter 3'],
-        mode: 'offscreen',
-        scatter: true,
-        containerId: 'test-scatter'
-      });
-      updateStatus('Injected with scatter mode. Check multiple containers in DevTools.');
-    }
-
-    // Auto-initialize with default settings
     window.YourPkg.init({
-      count: 3,
-      mode: 'offscreen'
+      token: 'e2e-canary',
+      registerHeader: (name, value) => {
+        window.__canaryHeader = { name, value };
+      },
+      userAgent: navigator.userAgent
     });
-    
-    updateStatus('SDK initialized with default settings');
   </script>
 </body>
 </html>
-

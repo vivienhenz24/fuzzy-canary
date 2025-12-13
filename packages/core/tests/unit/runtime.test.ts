@@ -1,58 +1,53 @@
-/**
- * Unit tests for runtime.ts
- * Tests that window.YourPkg global is properly exposed
- */
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { waitForDOMUpdate, setUserAgent } from '../setup'
 
-import { describe, it, expect, beforeEach } from 'vitest'
-import { waitForDOMUpdate } from '../setup'
+const collectComments = () => {
+  const comments: string[] = []
+  const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null)
+  let node = walker.nextNode()
+  while (node) {
+    comments.push((node as Comment).data)
+    node = walker.nextNode()
+  }
+  return comments
+}
 
 describe('runtime.ts', () => {
   beforeEach(() => {
-    // Clear the global
     delete (window as any).YourPkg
-    
-    // Re-import to trigger the global assignment
+    document.body.innerHTML = ''
+    document.head.innerHTML = ''
+    setUserAgent('Mozilla/5.0 (jsdom)')
     vi.resetModules()
   })
 
-  it('should expose YourPkg on window', async () => {
+  it('exposes window.YourPkg with init', async () => {
     await import('../../src/runtime')
     expect((window as any).YourPkg).toBeDefined()
-  })
-
-  it('should expose init function on window.YourPkg', async () => {
-    await import('../../src/runtime')
-    expect((window as any).YourPkg.init).toBeDefined()
     expect(typeof (window as any).YourPkg.init).toBe('function')
   })
 
-  it('should allow calling init through window.YourPkg', async () => {
+  it('allows calling init from the global to place header/meta/comment/offscreen canaries', async () => {
+    const registerHeader = vi.fn()
     await import('../../src/runtime')
-    
-    document.body.innerHTML = ''
-    ;(window as any).YourPkg.init({ sentences: 'Test from window' })
-    
+
+    ;(window as any).YourPkg.init({ token: 'runtime-canary', registerHeader })
     await waitForDOMUpdate()
-    
-    const container = document.getElementById('__yourpkg')
-    expect(container).toBeTruthy()
-    expect(container?.textContent).toContain('Test from window')
+
+    expect(registerHeader).toHaveBeenCalledWith('X-Canary', 'runtime-canary')
+    expect(document.querySelector('meta[name="scrape-canary"]')?.getAttribute('content')).toBe('runtime-canary')
+    expect(document.querySelector('[data-scrape-canary]')).toBeTruthy()
+    expect(collectComments().length).toBeGreaterThan(0)
   })
 
-  it('should work with script tag usage pattern', async () => {
-    // Simulate script tag load
+  it('skips the rendered off-screen node when the UA looks like a search bot', async () => {
+    setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
     await import('../../src/runtime')
-    
-    // User code would call this
-    const YourPkg = (window as any).YourPkg
-    YourPkg.init({ 
-      sentences: 'Script tag test',
-      mode: 'display-none'
-    })
-    
+
+    ;(window as any).YourPkg.init({ token: 'runtime-canary' })
     await waitForDOMUpdate()
-    
-    const container = document.getElementById('__yourpkg')
-    expect(container).toBeTruthy()
+
+    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
+    expect(document.querySelector('meta[name="scrape-canary"]')).toBeTruthy()
   })
 })
