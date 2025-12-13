@@ -17,26 +17,6 @@ const parseList = (value: string | undefined): string[] | undefined => {
     .filter(Boolean)
 }
 
-const readEnv = (): Partial<InitOptions> => {
-  if (typeof process === 'undefined' || !process.env) return {}
-  const {
-    FUZZYCANARY_TOKEN,
-    NEXT_PUBLIC_FUZZYCANARY_TOKEN,
-    FUZZYCANARY_HEADER,
-    NEXT_PUBLIC_FUZZYCANARY_HEADER,
-    FUZZYCANARY_META,
-    NEXT_PUBLIC_FUZZYCANARY_META,
-    FUZZYCANARY_SKIP_BOTS,
-  } = process.env
-
-  return {
-    token: FUZZYCANARY_TOKEN || NEXT_PUBLIC_FUZZYCANARY_TOKEN,
-    headerName: FUZZYCANARY_HEADER || NEXT_PUBLIC_FUZZYCANARY_HEADER,
-    metaName: FUZZYCANARY_META || NEXT_PUBLIC_FUZZYCANARY_META,
-    skipOffscreenForBots: parseBoolean(FUZZYCANARY_SKIP_BOTS),
-  }
-}
-
 const readWindow = (): Partial<InitOptions> => {
   if (typeof globalThis === 'undefined') return {}
   const opts = globalAny.FUZZYCANARY_OPTIONS as Partial<InitOptions> | undefined
@@ -67,23 +47,20 @@ const readDataAttributes = (): Partial<InitOptions> => {
 }
 
 const resolveOptions = (): InitOptions | null => {
-  const env = readEnv()
   const win = readWindow()
   const data = readDataAttributes()
 
-  const token = win.token || data.token || env.token
+  const token = win.token || data.token
   const sentences = win.sentences || data.sentences
 
   return {
     token,
-    headerName: win.headerName || data.headerName || env.headerName,
-    metaName: win.metaName || data.metaName || env.metaName,
+    headerName: win.headerName || data.headerName,
+    metaName: win.metaName || data.metaName,
     skipOffscreenForBots:
       typeof win.skipOffscreenForBots === 'boolean'
         ? win.skipOffscreenForBots
-        : typeof data.skipOffscreenForBots === 'boolean'
-          ? data.skipOffscreenForBots
-          : env.skipOffscreenForBots,
+        : data.skipOffscreenForBots,
     registerHeader: win.registerHeader,
     sentences,
     userAgent: win.userAgent,

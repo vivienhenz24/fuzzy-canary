@@ -7,27 +7,31 @@ describe('auto.ts', () => {
     delete (globalThis as any)[AUTO_FLAG]
     vi.resetModules()
     vi.clearAllMocks()
-    delete process.env.FUZZYCANARY_TOKEN
-    delete process.env.NEXT_PUBLIC_FUZZYCANARY_TOKEN
     ;(globalThis as any).FUZZYCANARY_TOKEN = undefined
     ;(globalThis as any).FUZZYCANARY_OPTIONS = undefined
+    ;(document as any).currentScript = undefined
   })
 
-  it('auto-inits with env token', async () => {
-    process.env.FUZZYCANARY_TOKEN = 'env-token'
-    vi.mock('../../src/index', () => ({ init: vi.fn() }))
-    const { init } = await import('../../src/index')
-    await import('../../src/auto')
-    expect(init).toHaveBeenCalledWith(expect.objectContaining({ token: 'env-token' }))
-  })
-
-  it('prefers window token over env', async () => {
-    process.env.FUZZYCANARY_TOKEN = 'env-token'
+  it('auto-inits with window token', async () => {
     ;(globalThis as any).FUZZYCANARY_TOKEN = 'win-token'
     vi.mock('../../src/index', () => ({ init: vi.fn() }))
     const { init } = await import('../../src/index')
     await import('../../src/auto')
     expect(init).toHaveBeenCalledWith(expect.objectContaining({ token: 'win-token' }))
+  })
+
+  it('reads data attributes when no window values exist', async () => {
+    const script = document.createElement('script')
+    script.dataset.fuzzycanaryToken = 'data-token'
+    script.dataset.fuzzycanarySentences = 'alpha, beta'
+    ;(document as any).currentScript = script
+
+    vi.mock('../../src/index', () => ({ init: vi.fn() }))
+    const { init } = await import('../../src/index')
+    await import('../../src/auto')
+    expect(init).toHaveBeenCalledWith(
+      expect.objectContaining({ token: 'data-token', sentences: ['alpha', 'beta'] })
+    )
   })
 
   it('auto-inits with sentences even if token is absent', async () => {

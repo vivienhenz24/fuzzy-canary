@@ -48,8 +48,7 @@ Auto init looks for a token in this order:
 
 - `window.FUZZYCANARY_OPTIONS.token` or `window.FUZZYCANARY_TOKEN`
 - `data-fuzzycanary-token` on the current `<script>` tag (supports `data-fuzzycanary-sentences="a,b,c"`)
-- `process.env.FUZZYCANARY_TOKEN` or `process.env.NEXT_PUBLIC_FUZZYCANARY_TOKEN`
 
-Optional names can be set via `window.FUZZYCANARY_OPTIONS`, data attributes (`data-fuzzycanary-header`, `data-fuzzycanary-meta`, `data-fuzzycanary-skip-bots`), or env vars (`FUZZYCANARY_HEADER`, `FUZZYCANARY_META`, `FUZZYCANARY_SKIP_BOTS`).
+Optional names can be set via `window.FUZZYCANARY_OPTIONS` or data attributes (`data-fuzzycanary-header`, `data-fuzzycanary-meta`, `data-fuzzycanary-skip-bots`).
 
 If you omit both token and sentences, the SDK picks a random bundled sentence from `src/sentences.yaml` to keep crawlers busy with zero setup.
