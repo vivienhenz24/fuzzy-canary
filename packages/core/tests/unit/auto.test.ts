@@ -36,4 +36,14 @@ describe('auto.ts', () => {
     await import('../../src/auto')
     expect(warnSpy).toHaveBeenCalled()
   })
+
+  it('auto-inits with sentences even if token is absent', async () => {
+    const warnSpy = vi.spyOn(console, 'warn')
+    ;(globalThis as any).FUZZYCANARY_OPTIONS = { sentences: ['hello world'] }
+    vi.mock('../../src/index', () => ({ init: vi.fn() }))
+    const { init } = await import('../../src/index')
+    await import('../../src/auto')
+    expect(init).toHaveBeenCalledWith(expect.objectContaining({ sentences: ['hello world'] }))
+    expect(warnSpy).not.toHaveBeenCalled()
+  })
 })

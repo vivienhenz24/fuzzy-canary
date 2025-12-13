@@ -99,4 +99,20 @@ describe('index.ts - canary placement strategy', () => {
     expect(CANARY_TOKEN).not.toMatch(/\s/)
     expect(tokenText).not.toMatch(/copyright|legal|prohibited/i)
   })
+
+  it('can inject only sentences when no token is provided', async () => {
+    const registerHeader = vi.fn()
+    init({ sentences: ['lorem ipsum', 'dolor sit amet'], registerHeader })
+    await waitForDOMUpdate()
+
+    expect(document.querySelector('meta[name="scrape-canary"]')).toBeNull()
+    expect(registerHeader).not.toHaveBeenCalled()
+
+    const offscreen = document.querySelector('[data-scrape-canary]')
+    expect(offscreen?.textContent).toContain('lorem ipsum')
+    expect(offscreen?.textContent).toContain('dolor sit amet')
+
+    const comments = collectComments().join(' ')
+    expect(comments).toContain('lorem ipsum')
+  })
 })
