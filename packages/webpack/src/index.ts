@@ -36,6 +36,7 @@ export class YourPkgWebpackPlugin {
             voidTag: false,
             attributes: { type: 'module' },
             innerHTML: inline,
+            meta: {},
           })
         } else {
           data.headTags.push({
@@ -43,6 +44,7 @@ export class YourPkgWebpackPlugin {
             voidTag: false,
             attributes: { type: 'module' },
             innerHTML: inline,
+            meta: {},
           })
         }
         return data

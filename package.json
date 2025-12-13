@@ -11,6 +11,7 @@
     "test:e2e": "pnpm -C packages/core test:e2e",
     "lint": "pnpm -r lint",
     "type-check": "tsc --noEmit",
+    "pr": "pnpm lint && pnpm type-check && pnpm test",
     "clean": "pnpm -r clean && rm -rf node_modules"
   },
   "keywords": [],
@@ -19,6 +20,7 @@
   "packageManager": "pnpm@10.11.1",
   "devDependencies": {
     "@types/node": "^25.0.1",
+    "@types/react": "^18.3.12",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"
