@@ -40,6 +40,20 @@ jobs:
       - name: Build packages
         run: pnpm build
 
-      - name: Publish @fuzzycanary/core via OIDC
+      - name: Check if version already published
+        id: version_check
         working-directory: packages/core
-        run: npm publish --access public --no-git-checks
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+          if npm view @fuzzycanary/core versions --json | grep -q "\"$PKG_VERSION\""; then
+            echo "Version $PKG_VERSION already published; skipping."
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Publish @fuzzycanary/core via OIDC
+        if: steps.version_check.outputs.skip != 'true'
+        working-directory: packages/core
+        run: npm publish --access public
