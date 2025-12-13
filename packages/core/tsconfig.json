@@ -1,0 +1,4 @@
+{
+  "_comment": "TypeScript configuration for the core package - extends root config and specifies compilation options for building the SDK"
+}
+

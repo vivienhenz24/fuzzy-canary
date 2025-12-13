@@ -1,0 +1,48 @@
+{
+  "name": "@yourpkg/core",
+  "version": "0.1.0",
+  "description": "Client-side SDK for adding hidden DOM payloads to deter scrapers",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "types": "./dist/index.d.ts"
+    },
+    "./runtime": "./dist/runtime.min.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:e2e": "playwright test",
+    "test:all": "pnpm test && pnpm build && pnpm test:e2e",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "dom",
+    "sdk",
+    "anti-scraping",
+    "hidden",
+    "payload"
+  ],
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@playwright/test": "^1.48.2",
+    "@types/node": "^25.0.1",
+    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/ui": "^4.0.15",
+    "jsdom": "^25.0.1",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
