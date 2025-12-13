@@ -1,5 +1,5 @@
 {
-  "name": "@yourpkg/core",
+  "name": "@fuzzycanary/core",
   "version": "0.1.0",
   "description": "Client-side SDK for adding hidden DOM payloads to deter scrapers",
   "main": "./dist/index.cjs",

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 
+// Provide a window object so YourPkgScript doesn't bail out
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+;(globalThis as any).window = {}
+
 // Mock react to run useEffect immediately and return null
 vi.mock('react', () => ({
   __esModule: true,
@@ -12,14 +16,14 @@ const mocks = vi.hoisted(() => ({
 }))
 
 // Mock core init
-vi.mock('@yourpkg/core', () => ({
+vi.mock('@fuzzycanary/core', () => ({
   __esModule: true,
   init: mocks.initMock,
 }))
 
 import { YourPkgScript } from '../src/index'
 
-describe('@yourpkg/next', () => {
+describe('@fuzzycanary/next', () => {
   it('calls init on mount when enabled', () => {
     const props = { token: 'canary-token' }
     const result = YourPkgScript(props)

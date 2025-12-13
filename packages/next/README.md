@@ -1,18 +1,18 @@
-# @yourpkg/next
+# @fuzzycanary/next
 
-Next.js adapter for [`@yourpkg/core`](https://www.npmjs.com/package/@yourpkg/core). Provides a `<YourPkgScript />` component that initializes the SDK on the client for both App Router and Pages Router apps.
+Next.js adapter for [`@fuzzycanary/core`](https://www.npmjs.com/package/@fuzzycanary/core). Provides a `<YourPkgScript />` component that initializes the SDK on the client for both App Router and Pages Router apps.
 
 ## Install
 
 ```bash
-pnpm add @yourpkg/core @yourpkg/next
+pnpm add @fuzzycanary/core @fuzzycanary/next
 ```
 
 ## Usage (App Router)
 
 ```tsx
 // app/layout.tsx
-import { YourPkgScript } from '@yourpkg/next'
+import { YourPkgScript } from '@fuzzycanary/next'
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 ```tsx
 // pages/_app.tsx
 import type { AppProps } from 'next/app'
-import { YourPkgScript } from '@yourpkg/next'
+import { YourPkgScript } from '@fuzzycanary/next'
 
 export default function App({ Component, pageProps }: AppProps) {
   return (
@@ -43,4 +43,4 @@ export default function App({ Component, pageProps }: AppProps) {
 }
 ```
 
-`YourPkgScript` accepts the same options as `init()` from `@yourpkg/core`.
+`YourPkgScript` accepts the same options as `init()` from `@fuzzycanary/core`.

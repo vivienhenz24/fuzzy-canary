@@ -1,5 +1,5 @@
 import type { Compiler } from 'webpack'
-import type { InitOptions } from '@yourpkg/core'
+import type { InitOptions } from '@fuzzycanary/core'
 import HtmlWebpackPlugin from 'html-webpack-plugin'
 
 export interface YourPkgWebpackOptions extends InitOptions {
@@ -10,7 +10,7 @@ export interface YourPkgWebpackOptions extends InitOptions {
 }
 
 /**
- * Webpack plugin that injects an inline module calling init() from @yourpkg/core.
+ * Webpack plugin that injects an inline module calling init() from @fuzzycanary/core.
  * Relies on HtmlWebpackPlugin being present in the config.
  */
 export class YourPkgWebpackPlugin {
@@ -21,8 +21,8 @@ export class YourPkgWebpackPlugin {
   }
 
   apply(compiler: Compiler): void {
-    const pluginName = '@yourpkg/webpack'
-    const script = `<script type="module">import { init } from '@yourpkg/core'; init(${JSON.stringify(
+    const pluginName = '@fuzzycanary/webpack'
+    const script = `<script type="module">import { init } from '@fuzzycanary/core'; init(${JSON.stringify(
       this.options
     )});</script>`
     const inline = script.replace('<script type="module">', '').replace('</script>', '')

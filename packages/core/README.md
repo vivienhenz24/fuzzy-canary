@@ -1,4 +1,4 @@
-# @yourpkg/core
+# @fuzzycanary/core
 
 Core package for the anti-scraping SDK. Injects hidden text into the DOM that is visible to web scrapers but not to human users. The injected content contains trigger phrases designed to activate scraper safeguards, discouraging automated data extraction while maintaining SEO and accessibility compliance.
 
@@ -12,9 +12,8 @@ This SDK helps protect websites from unauthorized scraping by injecting content 
 
 ## Installation
 
-Coming soon - package will be published to npm as `@yourpkg/core`
+Coming soon - package will be published to npm as `@fuzzycanary/core`
 
 ## Usage
 
 Coming soon - see main repository documentation
-

@@ -1,7 +1,7 @@
 {
-  "name": "@yourpkg/next",
+  "name": "@fuzzycanary/next",
   "version": "0.1.0",
-  "description": "Next.js adapter for @yourpkg/core. Provides a YourPkgScript component that initializes the SDK on the client.",
+  "description": "Next.js adapter for @fuzzycanary/core. Provides a YourPkgScript component that initializes the SDK on the client.",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -18,12 +18,12 @@
   "peerDependencies": {
     "react": ">=18.0.0",
     "next": ">=13.0.0",
-    "@yourpkg/core": "0.1.0"
+    "@fuzzycanary/core": "0.1.0"
   },
   "devDependencies": {
     "react": "^18.3.1",
     "next": "^15.0.0",
-    "@yourpkg/core": "0.1.0",
+    "@fuzzycanary/core": "workspace:*",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }

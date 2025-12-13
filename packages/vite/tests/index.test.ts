@@ -9,11 +9,11 @@ const baseHtml = `
 </html>
 `
 
-describe('@yourpkg/vite plugin', () => {
+describe('@fuzzycanary/vite plugin', () => {
   it('injects inline module into head by default', () => {
     const plugin = yourPkgVitePlugin({ token: 'abc' })
     const transformed = plugin.transformIndexHtml!(baseHtml) as string
-    expect(transformed).toContain("import { init } from '@yourpkg/core'")
+    expect(transformed).toContain("import { init } from '@fuzzycanary/core'")
     expect(transformed).toContain('abc')
     const headIndex = transformed.indexOf('import { init')
     const bodyIndex = transformed.indexOf('<body>')

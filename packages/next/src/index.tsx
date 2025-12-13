@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import type { InitOptions } from '@yourpkg/core'
-import { init } from '@yourpkg/core'
+import type { InitOptions } from '@fuzzycanary/core'
+import { init } from '@fuzzycanary/core'
 
 export type YourPkgScriptProps = InitOptions & {
   /** Set false to skip init entirely */

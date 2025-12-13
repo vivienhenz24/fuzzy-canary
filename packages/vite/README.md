@@ -1,11 +1,11 @@
-# @yourpkg/vite
+# @fuzzycanary/vite
 
-Vite plugin adapter for [`@yourpkg/core`](https://www.npmjs.com/package/@yourpkg/core). Injects a small inline module that calls `init()` during the HTML build step.
+Vite plugin adapter for [`@fuzzycanary/core`](https://www.npmjs.com/package/@fuzzycanary/core). Injects a small inline module that calls `init()` during the HTML build step.
 
 ## Install
 
 ```bash
-pnpm add @yourpkg/core @yourpkg/vite
+pnpm add @fuzzycanary/core @fuzzycanary/vite
 ```
 
 ## Usage
@@ -13,16 +13,16 @@ pnpm add @yourpkg/core @yourpkg/vite
 ```ts
 // vite.config.ts
 import { defineConfig } from 'vite'
-import yourPkgVitePlugin from '@yourpkg/vite'
+import yourPkgVitePlugin from '@fuzzycanary/vite'
 
 export default defineConfig({
   plugins: [
     yourPkgVitePlugin({
-      token: 'your-token', // plus any InitOptions from @yourpkg/core
+      token: 'your-token', // plus any InitOptions from @fuzzycanary/core
       position: 'head',    // or 'body'
     }),
   ],
 })
 ```
 
-This plugin is intentionally thin: it only injects an inline module that imports `init()` from `@yourpkg/core` with your options. All logic stays in the core SDK.
+This plugin is intentionally thin: it only injects an inline module that imports `init()` from `@fuzzycanary/core` with your options. All logic stays in the core SDK.

@@ -3,21 +3,25 @@ import { describe, it, expect, vi } from 'vitest'
 // Mock HtmlWebpackPlugin getHooks
 const alterTap = vi.fn()
 let capturedCallback: any
+const mockHooks = {
+  alterAssetTagGroups: {
+    tap: alterTap.mockImplementation((_name: string, cb: any) => {
+      capturedCallback = cb
+    }),
+  },
+}
+
 vi.mock('html-webpack-plugin', () => ({
   __esModule: true,
-  default: class {},
-  getHooks: () => ({
-    alterAssetTagGroups: {
-      tap: alterTap.mockImplementation((_name: string, cb: any) => {
-        capturedCallback = cb
-      }),
-    },
-  }),
+  default: {
+    getHooks: () => mockHooks,
+  },
+  getHooks: () => mockHooks,
 }))
 
 import { YourPkgWebpackPlugin } from '../src'
 
-describe('@yourpkg/webpack plugin', () => {
+describe('@fuzzycanary/webpack plugin', () => {
   it('registers alterAssetTagGroups and injects script into head by default', () => {
     const plugin = new YourPkgWebpackPlugin({ token: 'abc' })
 
