@@ -34,7 +34,7 @@ test.describe('E2E - best-practice canary placement', () => {
         pointerEvents: computed.pointerEvents,
         userSelect: computed.userSelect,
         ariaHidden: (el as HTMLElement).getAttribute('aria-hidden'),
-        text: (el as HTMLElement).textContent
+        text: (el as HTMLElement).textContent,
       }
     })
 
@@ -56,10 +56,12 @@ test.describe('E2E - best-practice canary placement', () => {
     expect(visibleText).not.toMatch(/copyright|unauthorized|scraping|prohibited/i)
   })
 
-  test('skips the rendered off-screen node for search bots while keeping header/meta/comment', async ({ browser }) => {
+  test('skips the rendered off-screen node for search bots while keeping header/meta/comment', async ({
+    browser,
+  }) => {
     const botContext = await browser.newContext({
       baseURL: 'http://localhost:3000',
-      userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
+      userAgent: 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
     })
     const page = await botContext.newPage()
     await page.goto('/test-page.html')

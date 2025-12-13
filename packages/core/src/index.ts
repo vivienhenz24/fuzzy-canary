@@ -1,5 +1,5 @@
-import type { InitOptions } from './types'
-import sentencesYaml from './sentences.yaml'
+import type { InitOptions } from '@/types'
+import sentencesYaml from '@/sentences.yaml'
 
 export type { InitOptions }
 

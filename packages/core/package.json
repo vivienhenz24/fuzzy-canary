@@ -1,6 +1,6 @@
 {
   "name": "@fuzzycanary/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Client-side SDK for adding hidden DOM payloads to deter scrapers",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",

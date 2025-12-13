@@ -59,3 +59,4 @@ jobs:
         env:
           NPM_KEY: ${{ secrets.NPM_KEY }}
           NPM_CONFIG_LOGLEVEL: verbose
+

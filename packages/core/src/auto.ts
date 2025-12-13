@@ -1,5 +1,5 @@
-import { init } from './index'
-import type { InitOptions } from './types'
+import { init } from '@/index'
+import type { InitOptions } from '@/types'
 
 const AUTO_INIT_FLAG = Symbol.for('fuzzycanary.autoInit')
 const globalAny = globalThis as any
