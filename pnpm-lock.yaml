@@ -63,8 +63,8 @@ importers:
   packages/next:
     devDependencies:
       '@fuzzycanary/core':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: workspace:*
+        version: link:../core
       '@types/react':
         specifier: ^18.3.12
         version: 18.3.27
