@@ -31,7 +31,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "test:e2e": "playwright test",
+    "test:e2e": "vitest run tests/integration/visibility-jsdom.test.ts",
+    "test:e2e:playwright": "playwright test",
     "test:all": "pnpm test && pnpm build && pnpm test:e2e",
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist"

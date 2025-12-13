@@ -36,3 +36,30 @@ import '@fuzzycanary/core/auto'
 ```
 
 No configuration is read from globals, data attributes, or env vars; it simply plants the bundled canary payload.
+
+## Development
+
+### Testing
+
+The package includes comprehensive tests:
+
+- **Unit tests**: `pnpm test` - Fast tests for individual functions
+- **Integration tests**: Included in `pnpm test`
+- **E2E tests (jsdom)**: `pnpm test:e2e` - Browser-like tests using jsdom (lightweight, AI-agent friendly)
+- **E2E tests (Playwright)**: `pnpm test:e2e:playwright` - Full browser tests (optional, heavier)
+- **All tests**: `pnpm test:all` - Runs unit, integration, and jsdom e2e tests
+
+The jsdom-based e2e tests provide the same coverage as Playwright tests but are:
+
+- Faster to run
+- Lighter weight (no browser binaries)
+- Easier to debug
+- Better suited for AI-assisted development
+
+### Building
+
+```sh
+pnpm build
+```
+
+Outputs to `dist/` with ESM, CJS, and type declarations.
