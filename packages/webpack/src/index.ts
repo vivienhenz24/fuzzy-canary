@@ -25,6 +25,7 @@ export class YourPkgWebpackPlugin {
     const script = `<script type="module">import { init } from '@yourpkg/core'; init(${JSON.stringify(
       this.options
     )});</script>`
+    const inline = script.replace('<script type="module">', '').replace('</script>', '')
 
     compiler.hooks.compilation.tap(pluginName, compilation => {
       const hooks = HtmlWebpackPlugin.getHooks(compilation)
@@ -34,14 +35,14 @@ export class YourPkgWebpackPlugin {
             tagName: 'script',
             voidTag: false,
             attributes: { type: 'module' },
-            innerHTML: script.replace(/<\\/?script[^>]*>/g, ''),
+            innerHTML: inline,
           })
         } else {
           data.headTags.push({
             tagName: 'script',
             voidTag: false,
             attributes: { type: 'module' },
-            innerHTML: script.replace(/<\\/?script[^>]*>/g, ''),
+            innerHTML: inline,
           })
         }
         return data
