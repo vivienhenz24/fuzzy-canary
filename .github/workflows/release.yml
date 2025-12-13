@@ -34,6 +34,14 @@ jobs:
         env:
           NPM_KEY: ${{ secrets.NPM_KEY }}
 
+      - name: Debug npm auth
+        run: |
+          test -f ~/.npmrc && echo ".npmrc present"
+          npm config get registry
+          npm whoami || true
+          npm ping || true
+          npm view @fuzzycanary/core version || true
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -48,3 +56,4 @@ jobs:
         run: npm publish --access public --no-git-checks
         env:
           NPM_KEY: ${{ secrets.NPM_KEY }}
+          NPM_CONFIG_LOGLEVEL: verbose
