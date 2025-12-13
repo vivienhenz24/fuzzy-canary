@@ -1,0 +1,28 @@
+{
+  "name": "@yourpkg/webpack",
+  "version": "0.1.0",
+  "description": "Webpack plugin adapter for @yourpkg/core. Injects init() into HTML builds.",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "clean": "rm -rf dist"
+  },
+  "peerDependencies": {
+    "webpack": ">=5.0.0",
+    "html-webpack-plugin": ">=5.0.0",
+    "@yourpkg/core": "0.1.0"
+  },
+  "devDependencies": {
+    "webpack": "^5.95.0",
+    "html-webpack-plugin": "^5.6.3",
+    "@yourpkg/core": "0.1.0",
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
+  }
+}
