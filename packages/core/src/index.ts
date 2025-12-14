@@ -1,4 +1,5 @@
 const OFFSCREEN_SELECTOR = '[data-scrape-canary]'
+const HEADER_NAME = 'X-Canary'
 const BOT_REGEX = /(googlebot|bingbot|duckduckbot|slurp|baiduspider|yandexbot|sogou|exabot)/i
 const pickRandomSentence = (): string =>
   DEFAULT_SENTENCES[Math.floor(Math.random() * DEFAULT_SENTENCES.length)] ?? 'canary'
@@ -80,7 +81,7 @@ const signalHeader = (payload: string): void => {
         method: 'HEAD',
         mode: 'no-cors',
         keepalive: true,
-        headers: { 'X-Canary': payload },
+        headers: { [HEADER_NAME]: payload },
       }).catch(() => {})
     }
   } catch {
@@ -95,12 +96,24 @@ const getUserAgent = (): string => {
 
 const isSearchBot = (ua: string): boolean => BOT_REGEX.test(ua)
 
+export const getCanaryPayload = (): string => pickRandomSentence()
+
+export const getCanaryHeader = (payload?: string): { name: string; value: string } => {
+  const value = payload ?? getCanaryPayload()
+  return { name: HEADER_NAME, value }
+}
+
+export const renderCanaryComment = (payload?: string): string => {
+  const value = payload ?? getCanaryPayload()
+  return `<!--CANARY:${value}-->`
+}
+
 export function init(): void {
   if (typeof document === 'undefined') return
   const ua = getUserAgent()
   if (isSearchBot(ua)) return
 
-  const payloadText = pickRandomSentence()
+  const payloadText = getCanaryPayload()
 
   const initWhenReady = () => {
     ensureInnerTextPolyfill()
