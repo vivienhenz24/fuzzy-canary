@@ -1,3 +1,4 @@
+import React from 'react'
 import { getCanaryPayload } from './index'
 
 /**
@@ -8,17 +9,11 @@ import { getCanaryPayload } from './index'
 export function Canary(): JSX.Element {
   const text = getCanaryPayload()
 
-  // Render as a text node by returning just the string wrapped in a fragment
-  // Use a span with data attribute for client-side detection
-  return {
-    type: 'span',
-    props: {
-      'data-fuzzy-canary': 'true',
-      style: { display: 'none' },
-      children: text,
-    },
-    key: null,
-  } as any
+  return (
+    <span data-fuzzy-canary="true" style={{ display: 'none' }}>
+      {text}
+    </span>
+  )
 }
 
 /**
