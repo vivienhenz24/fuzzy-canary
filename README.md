@@ -94,6 +94,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
+**Zero-Config**: The component automatically detects user agent from Next.js headers and skips rendering for legitimate bots (Google, Bing, etc.).
+
 ### Non-React Frameworks
 
 For other frameworks, use the `getCanaryText()` utility:

@@ -68,7 +68,7 @@ export default function RootLayout({ children }) {
 }
 ```
 
-**Zero-Config**: The client-side code automatically detects the SSR-injected canary and skips re-injection.
+**Zero-Config**: The component automatically detects user agent from Next.js headers and skips rendering for legitimate bots (Google, Bing, etc.). For other frameworks, you can pass `userAgent` manually. The client-side code automatically detects the SSR-injected canary and skips re-injection.
 
 ### Next.js App Router Example
 
@@ -87,6 +87,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   )
 }
 ```
+
+**Automatic Bot Detection**: The component automatically reads user agent from Next.js headers and skips rendering for legitimate bots (Google, Bing, social media crawlers).
 
 ### Next.js Pages Router Example
 
@@ -109,23 +111,35 @@ export default function Document() {
 }
 ```
 
+**Note**: Auto-detection works in Pages Router too, but `_document.tsx` runs in a different context. For best results, consider using client-side initialization (`import '@fuzzycanary/core/auto'`) which automatically detects bots.
+
 ### Remix Example
 
 ```tsx
 // app/root.tsx
 import { Canary } from '@fuzzycanary/core/react'
+import { useLoaderData } from '@remix-run/react'
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const userAgent = request.headers.get('user-agent') || ''
+  return { userAgent }
+}
 
 export default function App() {
+  const { userAgent } = useLoaderData<typeof loader>()
+
   return (
     <html lang="en">
       <body>
-        <Canary />
+        <Canary userAgent={userAgent} />
         <Outlet />
       </body>
     </html>
   )
 }
 ```
+
+**Note**: For Remix and other frameworks, pass `userAgent` manually since auto-detection only works in Next.js Server Components.
 
 ### Non-React Frameworks
 
