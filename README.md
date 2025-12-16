@@ -2,7 +2,7 @@
 
 # Fuzzy Canary
 
-An open-source, installable client-side SDK that adds honeypot links into a page's DOM at runtime.
+AI companies are scraping everyone's sites for training data. If you're self-hosting your blog, there's not much you can do about it, except maybe make them think your site contains content they won't want. Fuzzy Canary plants invisible links (to porn websites...) in your HTML that trigger scrapers' content safeguards.
 
 <div align="center">
 
@@ -24,62 +24,18 @@ npm i @fuzzycanary/core
 pnpm add @fuzzycanary/core
 ```
 
-### Quick Start
+### Usage
 
-The simplest way to use Fuzzy Canary is with the auto-init import:
+There are two ways to use it: client-side or server-side. Use server-side if you can—it works better because the canary is in the HTML from the start, so scrapers that don't run JavaScript will still see it.
 
-```ts
-// Entry file; just import once
-import '@fuzzycanary/core/auto' // immediately calls init() once
-```
+**Server-side (recommended):**
 
-That's it! The SDK will automatically inject hidden canary payloads into your DOM.
-
-### Manual Initialization
-
-If you prefer manual control, you can import and call `init` yourself:
-
-```ts
-import { init } from '@fuzzycanary/core'
-
-init() // no configuration needed; always injects a bundled hidden sentence
-```
-
-### How It Works
-
-Fuzzy Canary injects hidden honeypot links (porn links) at the beginning of your `<body>` tag. These links are invisible to users but present in the DOM for scrapers to discover. When AI scrapers ingest these links, their content safety filters detect the adult content and flag or refuse to process the scraped data - breaking the scraping pipeline.
-
-This approach is particularly effective against:
-
-- AI training data collection bots
-- LLM scraping tools
-- Automated content aggregators with safety filters
-
-The SDK automatically detects if canary links were already injected during server-side rendering (SSR), avoiding duplication. No configuration is required.
-
-### How the Canary Works
-
-The canary URLs are **porn links** designed to trigger AI scrapers' content safeguards. When AI bots scrape your site and ingest the hidden honeypot links, their safety filters detect the adult content and refuse to process it - effectively breaking the scraping pipeline or flagging the scraped content as unsafe.
-
-**Key points:**
-
-- URLs are injected at **build time** by the package maintainer using GitHub Actions secrets
-- The honeypot URLs point to adult content sites that trigger AI safety filters
-- Keeps the URLs out of the source code - they're baked into the distributed package
-- End users install the package with zero configuration needed
-- Links are invisible to users but present in the DOM for scrapers
-
-Links are rendered in the DOM as: `description - url` (e.g., "API Documentation - https://honeypot-domain.com/...")
-
-## Server-Side Rendering (Recommended when you pass UA)
-
-For maximum effectiveness against scrapers that don't execute JavaScript, use SSR to inject the canary into the initial HTML.
-
-### React-based Frameworks (Next.js, Remix, Astro with React)
-
-Use the `<Canary />` component in your root layout:
+If you're using a React-based framework (Next.js, Remix, etc.), add the `<Canary />` component to your root layout:
 
 ```tsx
+// Next.js App Router: app/layout.tsx
+// Remix: app/root.tsx
+// Other React frameworks: your root layout file
 import { Canary } from '@fuzzycanary/core/react'
 
 export default function RootLayout({ children }) {
@@ -94,20 +50,21 @@ export default function RootLayout({ children }) {
 }
 ```
 
-**Zero-Config**: The client-side code automatically detects the SSR-injected canary and skips re-injection. The component accepts an optional `userAgent` prop for manual bot detection in non-Next.js frameworks.
-
-### Next.js App Router
+For Next.js, that's it. For other frameworks like Remix, you'll need to pass the user agent from your loader:
 
 ```tsx
-// app/layout.tsx
-import { Canary } from '@fuzzycanary/core/react'
+// Remix example
+export async function loader({ request }) {
+  const userAgent = request.headers.get('user-agent') || ''
+  return { userAgent }
+}
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function App() {
+  const { userAgent } = useLoaderData()
   return (
-    <html lang="en">
+    <html>
       <body>
-        <Canary />{' '}
-        {/* auto-detects Next headers; pass userAgent manually if you opt out of dynamic rendering */}
+        <Canary userAgent={userAgent} />
         {children}
       </body>
     </html>
@@ -115,102 +72,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 }
 ```
 
-**Zero-Config**: The component automatically detects user agent from Next.js headers and skips rendering for legitimate bots (Google, Bing, etc.).
+For non-React frameworks, use the `getCanaryHtml()` utility and insert it at the start of your `<body>` tag.
 
-**Note**: Auto-detection only works in Next.js Server Components. For other frameworks (Remix, etc.), you need to pass the `userAgent` prop manually.
+**Client-side:**
 
-### Remix Example
-
-```tsx
-// app/root.tsx
-import { Canary } from '@fuzzycanary/core/react'
-import { useLoaderData } from '@remix-run/react'
-
-export async function loader({ request }: LoaderFunctionArgs) {
-  const userAgent = request.headers.get('user-agent') || ''
-  return { userAgent }
-}
-
-export default function App() {
-  const { userAgent } = useLoaderData<typeof loader>()
-
-  return (
-    <html lang="en">
-      <body>
-        <Canary userAgent={userAgent} />
-        <Outlet />
-      </body>
-    </html>
-  )
-}
-```
-
-### Next.js Pages Router
-
-```tsx
-// pages/_document.tsx
-import { Html, Head, Main, NextScript } from 'next/document'
-import { Canary } from '@fuzzycanary/core/react'
-
-export default function Document() {
-  return (
-    <Html>
-      <Head />
-      <body>
-        <Canary />
-        <Main />
-        <NextScript />
-      </body>
-    </Html>
-  )
-}
-```
-
-**Note**: Auto-detection works in Pages Router too, but `_document.tsx` runs in a different context. For best results, consider using client-side initialization (`import '@fuzzycanary/core/auto'`) which automatically detects bots.
-
-### Non-React Frameworks
-
-For other frameworks, use the `getCanaryHtml()` utility:
+If you're building a static site or prefer client-side injection, import the auto-init in your entry file:
 
 ```ts
-import { getCanaryHtml } from '@fuzzycanary/core'
-
-const canaryHtml = getCanaryHtml()
-// Insert at the start of body in your template
+// Your main entry file (e.g., main.ts, index.ts, App.tsx)
+import '@fuzzycanary/core/auto'
 ```
 
-### Astro Example
+That's it. It will automatically inject the canary when the page loads.
 
-```astro
----
-import { getCanaryHtml } from '@fuzzycanary/core'
-const canaryHtml = getCanaryHtml()
----
+## SEO
 
-<html>
-  <body>
-    <Fragment set:html={canaryHtml} />
-    <slot />
-  </body>
-</html>
-```
+Fuzzy Canary tries to avoid showing the canary to legitimate search engines. It keeps a list of known bots—Google, Bing, DuckDuckGo, and so on—and skips injecting the links when it detects them.
 
-### SvelteKit Example
+This works fine if your site is server-rendered. The server can check the incoming request's user agent before deciding whether to include the canary in the HTML. Google's crawler gets clean HTML, AI scrapers get the canary.
 
-```svelte
-<script>
-  import { getCanaryHtml } from '@fuzzycanary/core'
-  const canaryHtml = getCanaryHtml()
-</script>
+The problem is static sites. If your HTML is generated at build time and served as plain files, there's no user agent to check. The canary gets baked into the HTML for everyone, including Google. Right now this will hurt your SEO, because Google will see those links.
 
-{@html canaryHtml}
-<slot />
-```
-
-See the [core package README](./packages/core/README.md) for more details.
-
-## Static sites vs bots
-
-On a purely static site, do not bake the canary into HTML. Use the client entry (`import '@fuzzycanary/core/auto'`) so allowlisted bots that execute JS skip injection via `navigator.userAgent`, while other clients still get the canary. To strip canaries from static HTML for allowlisted bots you need a proxy/edge layer outside this package that can see the request UA and rewrite the response.
-
-**User-Agent filtering is inherently imperfect on static output**: if your pages are generated without per-request context, the build step cannot see the UA, so the canary HTML cannot be trimmed for allowlisted crawlers. You would need a runtime layer (proxy/edge middleware) to remove the canary for those bots.
+If you're using a static site generator, you probably want to use the client-side initialization instead. The JavaScript can check `navigator.userAgent` at runtime and skip injection for search bots. That's not perfect—it only works for bots that execute JavaScript—but it's better than nothing.
