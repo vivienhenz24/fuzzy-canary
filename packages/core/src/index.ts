@@ -1,4 +1,5 @@
-const BOT_REGEX = /(googlebot|bingbot|duckduckbot|slurp|baiduspider|yandexbot|sogou|exabot)/i
+import { isAllowlistedBot } from './allowlist'
+
 const AUTO_INIT_FLAG = Symbol.for('fuzzycanary.domInit')
 const AUTO_IMPORT_FLAG = Symbol.for('fuzzycanary.autoImport')
 const DISABLE_AUTO_FLAG = Symbol.for('fuzzycanary.disableAuto')
@@ -10,8 +11,6 @@ const getUserAgent = (): string => {
   if (typeof navigator !== 'undefined' && navigator.userAgent) return navigator.userAgent
   return ''
 }
-
-const isSearchBot = (ua: string): boolean => BOT_REGEX.test(ua)
 
 const hasSSRCanary = (): boolean => {
   if (typeof document === 'undefined') return false
@@ -33,6 +32,15 @@ const injectTextAtBodyStart = (payload: string): void => {
 
   // Check if canary text already exists at the start of body
   const firstChild = document.body.firstChild
+  if (firstChild && firstChild.nodeType === Node.ELEMENT_NODE) {
+    const element = firstChild as HTMLElement
+    if (
+      element.getAttribute('data-fuzzy-canary') === 'true' ||
+      element.textContent?.includes(payload)
+    ) {
+      return
+    }
+  }
   if (
     firstChild &&
     firstChild.nodeType === Node.TEXT_NODE &&
@@ -41,9 +49,12 @@ const injectTextAtBodyStart = (payload: string): void => {
     return
   }
 
-  // Insert text node at the beginning of body
-  const textNode = document.createTextNode(payload)
-  document.body.insertBefore(textNode, document.body.firstChild)
+  // Insert hidden span element at the beginning of body (invisible to users but present in DOM for scrapers)
+  const span = document.createElement('span')
+  span.setAttribute('data-fuzzy-canary', 'true')
+  span.style.display = 'none'
+  span.textContent = payload
+  document.body.insertBefore(span, document.body.firstChild)
 }
 
 export const getCanaryPayload = (): string => getCanaryParagraph()
@@ -57,7 +68,7 @@ export const getCanaryText = (): string => getCanaryParagraph()
 export function init(): void {
   if (globalAny[AUTO_INIT_FLAG]) return
   if (typeof document === 'undefined' || !document.body) return
-  if (isSearchBot(getUserAgent())) return
+  if (isAllowlistedBot(getUserAgent())) return
 
   const payloadText = getCanaryPayload()
   injectTextAtBodyStart(payloadText)
