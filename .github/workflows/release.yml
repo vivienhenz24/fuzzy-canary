@@ -57,3 +57,5 @@ jobs:
         if: steps.version_check.outputs.skip != 'true'
         working-directory: packages/core
         run: npm publish --access public
+
+

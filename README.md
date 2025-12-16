@@ -47,9 +47,62 @@ init() // no configuration needed; always injects a bundled hidden sentence
 
 ### How It Works
 
-Fuzzy Canary runs only in the browser (no-ops during SSR) and adds:
+Fuzzy Canary injects plain text with a random sentence at the beginning of your `<body>` tag. The text is present in the DOM for scrapers to pick up but can be styled to be invisible to users.
 
-- An offscreen node (aria-hidden, positioned offscreen)
-- A DOM comment containing a random bundled sentence
+The SDK automatically detects if a canary was already injected during server-side rendering (SSR), avoiding duplication. No configuration is required.
 
-No configuration is required - it simply plants the bundled canary payload automatically.
+## Server-Side Rendering (Recommended)
+
+For maximum effectiveness against scrapers that don't execute JavaScript, use SSR to inject the canary into the initial HTML.
+
+### React-based Frameworks (Next.js, Remix, Astro with React)
+
+Use the `<Canary />` component in your root layout:
+
+```tsx
+import { Canary } from '@fuzzycanary/core/react'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <Canary />
+        {children}
+      </body>
+    </html>
+  )
+}
+```
+
+**Zero-Config**: The client-side code automatically detects the SSR-injected canary and skips re-injection.
+
+### Next.js App Router
+
+```tsx
+// app/layout.tsx
+import { Canary } from '@fuzzycanary/core/react'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Canary />
+        {children}
+      </body>
+    </html>
+  )
+}
+```
+
+### Non-React Frameworks
+
+For other frameworks, use the `getCanaryText()` utility:
+
+```ts
+import { getCanaryText } from '@fuzzycanary/core'
+
+const canaryText = getCanaryText()
+// Insert at the start of body in your template
+```
+
+See the [core package README](./packages/core/README.md) for more examples (Remix, Astro, SvelteKit, etc.).

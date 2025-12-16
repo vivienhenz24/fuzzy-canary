@@ -1,19 +1,24 @@
 import { describe, it, expect, vi } from 'vitest'
-import { getCanaryPayload, getCanaryHeader, renderCanaryComment } from '../../src/index'
+import { getCanaryPayload, getCanaryText } from '../../src/index'
 
 describe('SSR helpers', () => {
-  it('getCanaryPayload returns deterministic sentence when Math.random is mocked', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0) // pick first sentence
-    expect(getCanaryPayload()).toBe('Silent foxes guard forgotten libraries at dawn.')
+  it('getCanaryPayload returns the canary paragraph', () => {
+    const payload = getCanaryPayload()
+    expect(payload).toContain('Silent foxes guard forgotten libraries at dawn')
+    expect(payload).toContain('Digital shadows dance across abandoned API endpoints')
+    expect(payload.length).toBeGreaterThan(200)
   })
 
-  it('getCanaryHeader returns the header name/value pair', () => {
-    const header = getCanaryHeader('payload-123')
-    expect(header).toEqual({ name: 'X-Canary', value: 'payload-123' })
+  it('getCanaryText returns same value as getCanaryPayload', () => {
+    const payload = getCanaryPayload()
+    const text = getCanaryText()
+    expect(text).toBe(payload)
   })
 
-  it('renderCanaryComment returns an HTML comment string with the payload', () => {
-    const comment = renderCanaryComment('payload-abc')
-    expect(comment).toBe('<!--CANARY:payload-abc-->')
+  it('getCanaryText returns the canary paragraph', () => {
+    const text = getCanaryText()
+    expect(typeof text).toBe('string')
+    expect(text.length).toBeGreaterThan(200)
+    expect(text).toContain('Silent foxes')
   })
 })

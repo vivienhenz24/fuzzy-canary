@@ -20,11 +20,18 @@
       "import": "./dist/auto.js",
       "require": "./dist/auto.cjs"
     },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "import": "./dist/react.js",
+      "require": "./dist/react.cjs"
+    },
     "./runtime": "./dist/runtime.min.js"
   },
   "sideEffects": [
     "./dist/auto.js",
-    "./dist/runtime.min.js"
+    "./dist/runtime.min.js",
+    "./dist/index.js",
+    "./dist/index.cjs"
   ],
   "files": [
     "dist"
@@ -49,7 +56,16 @@
     "payload"
   ],
   "license": "Apache-2.0",
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@types/react": "^18.2.0",
     "@playwright/test": "^1.48.2",
     "@types/node": "^25.0.1",
     "@vitest/coverage-v8": "^4.0.15",

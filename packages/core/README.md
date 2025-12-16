@@ -41,12 +41,133 @@ init() // no configuration needed; always injects a bundled hidden sentence
 
 ### How It Works
 
-Runs only in the browser; `init` no-ops during SSR. It adds:
+Fuzzy Canary injects plain text with a random sentence at the beginning of your `<body>` tag. The text is present in the DOM for scrapers to pick up but can be styled to be invisible to users.
 
-- An offscreen node (aria-hidden, positioned offscreen)
-- A DOM comment containing a random bundled sentence
+The SDK runs in the browser and automatically detects if a canary was already injected during server-side rendering (SSR), avoiding duplication.
 
-No configuration is read from globals, data attributes, or env vars; it simply plants the bundled canary payload.
+## Server-Side Rendering (SSR)
+
+For maximum effectiveness against scrapers that don't execute JavaScript, use SSR to inject the canary into the initial HTML.
+
+### React-based Frameworks (Next.js, Remix, Astro with React)
+
+Use the `<Canary />` component in your root layout:
+
+```tsx
+import { Canary } from '@fuzzycanary/core/react'
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <Canary />
+        {children}
+      </body>
+    </html>
+  )
+}
+```
+
+**Zero-Config**: The client-side code automatically detects the SSR-injected canary and skips re-injection.
+
+### Next.js App Router Example
+
+```tsx
+// app/layout.tsx
+import { Canary } from '@fuzzycanary/core/react'
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body>
+        <Canary />
+        {children}
+      </body>
+    </html>
+  )
+}
+```
+
+### Next.js Pages Router Example
+
+```tsx
+// pages/_document.tsx
+import { Html, Head, Main, NextScript } from 'next/document'
+import { Canary } from '@fuzzycanary/core/react'
+
+export default function Document() {
+  return (
+    <Html>
+      <Head />
+      <body>
+        <Canary />
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  )
+}
+```
+
+### Remix Example
+
+```tsx
+// app/root.tsx
+import { Canary } from '@fuzzycanary/core/react'
+
+export default function App() {
+  return (
+    <html lang="en">
+      <body>
+        <Canary />
+        <Outlet />
+      </body>
+    </html>
+  )
+}
+```
+
+### Non-React Frameworks
+
+For other frameworks, use the `getCanaryText()` utility:
+
+```ts
+import { getCanaryText } from '@fuzzycanary/core'
+
+// In your template or SSR handler
+const canaryText = getCanaryText()
+
+// Insert at the start of body:
+// <body><span data-fuzzy-canary="true" style="display:none;">${canaryText}</span>...
+```
+
+### Astro Example
+
+```astro
+---
+import { getCanaryText } from '@fuzzycanary/core'
+const canaryText = getCanaryText()
+---
+
+<html>
+  <body>
+    <span data-fuzzy-canary="true" style="display:none;">{canaryText}</span>
+    <slot />
+  </body>
+</html>
+```
+
+### SvelteKit Example
+
+```svelte
+<script>
+  import { getCanaryText } from '@fuzzycanary/core'
+  const canaryText = getCanaryText()
+</script>
+
+<span data-fuzzy-canary="true" style="display:none;">{canaryText}</span>
+<slot />
+```
 
 ## Development
 

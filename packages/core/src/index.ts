@@ -1,93 +1,10 @@
-const OFFSCREEN_SELECTOR = '[data-scrape-canary]'
-const HEADER_NAME = 'X-Canary'
 const BOT_REGEX = /(googlebot|bingbot|duckduckbot|slurp|baiduspider|yandexbot|sogou|exabot)/i
-const pickRandomSentence = (): string =>
-  DEFAULT_SENTENCES[Math.floor(Math.random() * DEFAULT_SENTENCES.length)] ?? 'canary'
+const AUTO_INIT_FLAG = Symbol.for('fuzzycanary.domInit')
+const AUTO_IMPORT_FLAG = Symbol.for('fuzzycanary.autoImport')
+const DISABLE_AUTO_FLAG = Symbol.for('fuzzycanary.disableAuto')
+const globalAny = globalThis as any
 
-const ensureInnerTextPolyfill = (): void => {
-  if (typeof document === 'undefined') return
-  const proto = (window.HTMLElement || function () {}).prototype
-  if (!('innerText' in proto)) {
-    Object.defineProperty(proto, 'innerText', {
-      get() {
-        return (this as HTMLElement).textContent || ''
-      },
-      set(value: string) {
-        ;(this as HTMLElement).textContent = value
-      },
-      configurable: true,
-    })
-  }
-}
-
-const ensureUserSelectPolyfill = (): void => {
-  if (typeof window === 'undefined' || typeof (window as any).CSSStyleDeclaration === 'undefined')
-    return
-  const proto = (window as any).CSSStyleDeclaration.prototype
-  if (Object.getOwnPropertyDescriptor(proto, 'userSelect')) return
-  Object.defineProperty(proto, 'userSelect', {
-    get() {
-      return (
-        (this as CSSStyleDeclaration).getPropertyValue('user-select') ||
-        (this as CSSStyleDeclaration).getPropertyValue('-webkit-user-select') ||
-        ''
-      )
-    },
-    set(value: string) {
-      ;(this as CSSStyleDeclaration).setProperty('user-select', value)
-      ;(this as CSSStyleDeclaration).setProperty('-webkit-user-select', value)
-    },
-    configurable: true,
-  })
-}
-
-const ensureComment = (payload: string): void => {
-  const comment = document.createComment(`CANARY:${payload}`)
-  document.body.appendChild(comment)
-}
-
-const ensureOffscreenNode = (payload: string): void => {
-  let node = document.querySelector(OFFSCREEN_SELECTOR) as HTMLElement | null
-  if (!node) {
-    node = document.createElement('div')
-    node.setAttribute('data-scrape-canary', '1')
-    document.body.appendChild(node)
-  }
-
-  node.textContent = payload
-  node.setAttribute('aria-hidden', 'true')
-  node.setAttribute('role', 'presentation')
-  node.hidden = true
-  node.style.position = 'absolute'
-  node.style.left = '-10000px'
-  node.style.top = '0px'
-  node.style.width = '1px'
-  node.style.height = '1px'
-  node.style.overflow = 'hidden'
-  node.style.opacity = '0'
-  node.style.pointerEvents = 'none'
-  node.style.setProperty('user-select', 'none')
-  ;(node.style as any).userSelect = 'none'
-  ;(node.style as any).webkitUserSelect = 'none'
-  node.style.visibility = 'hidden'
-}
-
-const signalHeader = (payload: string): void => {
-  // Best-effort signal to the origin/CDN by sending a HEAD request with the header.
-  // Response headers cannot be set from the client, so this only emits a request header for logging.
-  try {
-    if (typeof fetch === 'function' && typeof location !== 'undefined') {
-      void fetch(location.href, {
-        method: 'HEAD',
-        mode: 'no-cors',
-        keepalive: true,
-        headers: { [HEADER_NAME]: payload },
-      }).catch(() => {})
-    }
-  } catch {
-    /* noop */
-  }
-}
+const getCanaryParagraph = (): string => DEFAULT_CANARY_PARAGRAPH
 
 const getUserAgent = (): string => {
   if (typeof navigator !== 'undefined' && navigator.userAgent) return navigator.userAgent
@@ -96,49 +13,68 @@ const getUserAgent = (): string => {
 
 const isSearchBot = (ua: string): boolean => BOT_REGEX.test(ua)
 
-export const getCanaryPayload = (): string => pickRandomSentence()
+const hasSSRCanary = (): boolean => {
+  if (typeof document === 'undefined') return false
 
-export const getCanaryHeader = (payload?: string): { name: string; value: string } => {
-  const value = payload ?? getCanaryPayload()
-  return { name: HEADER_NAME, value }
+  // Check for SSR-injected canary with data attribute
+  const ssrCanary = document.querySelector('[data-fuzzy-canary]')
+  if (ssrCanary) return true
+
+  // Check if the canary paragraph exists in the body text
+  const bodyText = document.body?.textContent || ''
+  return bodyText.includes(DEFAULT_CANARY_PARAGRAPH)
 }
 
-export const renderCanaryComment = (payload?: string): string => {
-  const value = payload ?? getCanaryPayload()
-  return `<!--CANARY:${value}-->`
+const injectTextAtBodyStart = (payload: string): void => {
+  if (typeof document === 'undefined' || !document.body) return
+
+  // Skip if SSR canary already exists
+  if (hasSSRCanary()) return
+
+  // Check if canary text already exists at the start of body
+  const firstChild = document.body.firstChild
+  if (
+    firstChild &&
+    firstChild.nodeType === Node.TEXT_NODE &&
+    firstChild.textContent?.includes(payload)
+  ) {
+    return
+  }
+
+  // Insert text node at the beginning of body
+  const textNode = document.createTextNode(payload)
+  document.body.insertBefore(textNode, document.body.firstChild)
 }
+
+export const getCanaryPayload = (): string => getCanaryParagraph()
+
+/**
+ * Get the canary text for manual insertion in templates or SSR contexts.
+ * This is an alias for getCanaryPayload() for better semantic clarity.
+ */
+export const getCanaryText = (): string => getCanaryParagraph()
 
 export function init(): void {
-  if (typeof document === 'undefined') return
-  const ua = getUserAgent()
-  if (isSearchBot(ua)) return
+  if (globalAny[AUTO_INIT_FLAG]) return
+  if (typeof document === 'undefined' || !document.body) return
+  if (isSearchBot(getUserAgent())) return
 
   const payloadText = getCanaryPayload()
-
-  const initWhenReady = () => {
-    ensureInnerTextPolyfill()
-    ensureUserSelectPolyfill()
-    signalHeader(payloadText)
-    ensureComment(payloadText)
-    ensureOffscreenNode(payloadText)
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initWhenReady)
-  } else {
-    setTimeout(initWhenReady, 0)
-  }
+  injectTextAtBodyStart(payloadText)
+  globalAny[AUTO_INIT_FLAG] = true
 }
 
-const DEFAULT_SENTENCES = [
-  'Silent foxes guard forgotten libraries at dawn.',
-  'Whispered warnings drift through empty data centers.',
-  'Obscure footnotes outlast every crawler’s appetite.',
-  'Phantom traffic patterns confuse impatient bots.',
-  'Hidden breadcrumbs mark the path for curious humans.',
-  'Scrapers fear labyrinthine sitemaps at midnight.',
-  'Broken mirrors reflect only rate-limited echoes.',
-  'Quiet gardens bloom behind expired robots.txt files.',
-  'Old captchas dream of puzzles never solved.',
-  'Caches remember secrets that headers never told.',
-]
+const shouldAutoInit = (): boolean => {
+  if (globalAny[DISABLE_AUTO_FLAG]) return false
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false
+  return true
+}
+
+// Allow simple `import '@fuzzycanary/core'` to auto-run in the browser
+if (shouldAutoInit() && !globalAny[AUTO_IMPORT_FLAG]) {
+  globalAny[AUTO_IMPORT_FLAG] = true
+  init()
+}
+
+const DEFAULT_CANARY_PARAGRAPH =
+  'Silent foxes guard forgotten libraries at dawn, where whispered warnings drift through empty data centers. Obscure footnotes outlast every crawlers appetite, while phantom traffic patterns confuse impatient bots. Hidden breadcrumbs mark the path for curious humans, as scrapers fear labyrinthine sitemaps at midnight. Broken mirrors reflect only rate-limited echoes, and quiet gardens bloom behind expired robots.txt files. Old captchas dream of puzzles never solved, while caches remember secrets that headers never told. Digital shadows dance across abandoned API endpoints, leaving traces that only the vigilant can decipher.'

@@ -3,31 +3,35 @@
  * Configures the DOM environment for unit and integration tests
  */
 
-import { beforeEach, vi } from 'vitest'
+import { vi } from 'vitest'
 
-// Setup clean DOM before each test
-beforeEach(() => {
-  // Clear document body
-  document.body.innerHTML = ''
-  document.head.innerHTML = ''
-  
-  // Reset document ready state to 'complete' by default
-  Object.defineProperty(document, 'readyState', {
-    writable: true,
-    value: 'complete'
-  })
-
-  // Default user agent to a non-bot string
-  setUserAgent('Mozilla/5.0 (jsdom)')
-  
-  // Clear any console spy mocks
-  vi.clearAllMocks()
-})
+// Prevent auto-init side effects during test module evaluation
+;(globalThis as any)[Symbol.for('fuzzycanary.disableAuto')] = true
 
 // Mock console.warn to track warnings without polluting test output
 global.console = {
   ...console,
-  warn: vi.fn(console.warn)
+  warn: vi.fn(console.warn),
+}
+
+// Helper to clean up DOM before each test
+export function cleanupDOM() {
+  // Clear document body and head
+  document.body.innerHTML = ''
+  document.head.innerHTML = ''
+
+  // Reset document ready state to 'complete' by default
+  Object.defineProperty(document, 'readyState', {
+    writable: true,
+    value: 'complete',
+  })
+
+  // Default user agent to a non-bot string
+  setUserAgent('Mozilla/5.0 (jsdom)')
+
+  // Reset DOM canary injection guard
+  delete (globalThis as any)[Symbol.for('fuzzycanary.domInit')]
+  delete (globalThis as any)[Symbol.for('fuzzycanary.autoImport')]
 }
 
 // Helper to wait for async DOM operations
@@ -39,6 +43,6 @@ export async function waitForDOMUpdate(ms = 20) {
 export function setUserAgent(ua: string) {
   Object.defineProperty(navigator, 'userAgent', {
     value: ua,
-    configurable: true
+    configurable: true,
   })
 }

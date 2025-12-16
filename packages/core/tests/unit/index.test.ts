@@ -1,74 +1,51 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { init } from '../../src/index'
-import { waitForDOMUpdate, setUserAgent } from '../setup'
-
-const collectComments = () => {
-  const comments: string[] = []
-  const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null)
-  let node = walker.nextNode()
-  while (node) {
-    comments.push((node as Comment).data)
-    node = walker.nextNode()
-  }
-  return comments
-}
+import { waitForDOMUpdate, setUserAgent, cleanupDOM } from '../setup'
 
 describe('index.ts - canary placement strategy (no config)', () => {
   beforeEach(() => {
-    document.body.innerHTML = ''
-    document.head.innerHTML = ''
+    cleanupDOM()
     vi.clearAllMocks()
-    setUserAgent('Mozilla/5.0 (jsdom)')
   })
 
-  it('injects a bundled sentence into both comment and off-screen node and signals header', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0) // pick first sentence deterministically
-    const fetchSpy = vi
-      .spyOn(global, 'fetch' as any)
-      .mockImplementation(() => Promise.resolve() as any)
-
+  it('injects text at the beginning of body with the canary paragraph', async () => {
     init()
     await waitForDOMUpdate()
 
-    const offscreen = document.querySelector('[data-scrape-canary]')
-    expect(offscreen).toBeTruthy()
-    expect(offscreen?.textContent).toContain('Silent foxes guard forgotten libraries at dawn.')
-
-    const comments = collectComments().join(' ')
-    expect(comments).toContain('CANARY:')
-    expect(comments).toContain('Silent foxes guard forgotten libraries at dawn.')
-    expect(fetchSpy).toHaveBeenCalled()
+    // Check that text was injected at the start of body
+    const firstChild = document.body.firstChild
+    expect(firstChild?.nodeType).toBe(Node.TEXT_NODE)
+    expect(firstChild?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
+    expect(firstChild?.textContent).toContain(
+      'Digital shadows dance across abandoned API endpoints'
+    )
+    expect(firstChild?.textContent?.length).toBeGreaterThan(200)
   })
 
-  it('skips all canaries for known search bots', async () => {
+  it('skips injection for known search bots', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
-    const fetchSpy = vi
-      .spyOn(global, 'fetch' as any)
-      .mockImplementation(() => Promise.resolve() as any)
 
     init()
     await waitForDOMUpdate()
 
-    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
-    const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null)
-    expect(walker.nextNode()).toBeNull()
-    expect(fetchSpy).not.toHaveBeenCalled()
+    // Body should be empty since bot injection is skipped
+    expect(document.body.textContent).toBe('')
+    expect(document.body.childNodes.length).toBe(0)
   })
 
-  it('applies safe styling to the off-screen node', async () => {
+  it('skips injection if SSR canary already exists', () => {
+    // Simulate SSR-injected canary
+    const ssrCanary = document.createElement('span')
+    ssrCanary.setAttribute('data-fuzzy-canary', 'true')
+    ssrCanary.textContent = 'SSR canary text'
+    document.body.appendChild(ssrCanary)
+
     init()
-    await waitForDOMUpdate()
 
-    const element = document.querySelector('[data-scrape-canary]') as HTMLElement
-    const styles = element.style
-
-    expect(styles.position).toBe('absolute')
-    expect(styles.left).toBe('-10000px')
-    expect(styles.top).toBe('0px')
-    expect(styles.pointerEvents).toBe('none')
-    expect(styles.userSelect).toBe('none')
-    expect(element.getAttribute('aria-hidden')).toBe('true')
-    expect(element.getAttribute('role')).toBe('presentation')
-    expect(element.hidden).toBe(true)
+    // Should not inject another text node
+    const textNodes = Array.from(document.body.childNodes).filter(
+      node => node.nodeType === Node.TEXT_NODE
+    )
+    expect(textNodes.length).toBe(0)
   })
 })

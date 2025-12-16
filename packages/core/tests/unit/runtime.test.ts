@@ -1,23 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
-import { waitForDOMUpdate, setUserAgent } from '../setup'
-
-const collectComments = () => {
-  const comments: string[] = []
-  const walker = document.createTreeWalker(document, NodeFilter.SHOW_COMMENT, null)
-  let node = walker.nextNode()
-  while (node) {
-    comments.push((node as Comment).data)
-    node = walker.nextNode()
-  }
-  return comments
-}
+import { waitForDOMUpdate, setUserAgent, cleanupDOM } from '../setup'
 
 describe('runtime.ts', () => {
   beforeEach(() => {
+    cleanupDOM()
     delete (window as any).YourPkg
-    document.body.innerHTML = ''
-    document.head.innerHTML = ''
-    setUserAgent('Mozilla/5.0 (jsdom)')
+    delete (globalThis as any)[Symbol.for('fuzzycanary.domInit')]
     vi.resetModules()
   })
 
@@ -27,23 +15,27 @@ describe('runtime.ts', () => {
     expect(typeof (window as any).YourPkg.init).toBe('function')
   })
 
-  it('allows calling init from the global to place comment/offscreen canaries', async () => {
+  it('allows calling init from the global to inject canary', async () => {
     await import('../../src/runtime')
-
-    vi.spyOn(Math, 'random').mockReturnValue(0.75)
     ;(window as any).YourPkg.init()
     await waitForDOMUpdate()
 
-    expect(document.querySelector('[data-scrape-canary]')).toBeTruthy()
-    expect(collectComments().length).toBeGreaterThan(0)
+    const firstChild = document.body.firstChild
+    expect(firstChild?.nodeType).toBe(Node.TEXT_NODE)
+    expect(firstChild?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
+    expect(firstChild?.textContent).toContain(
+      'Digital shadows dance across abandoned API endpoints'
+    )
+    expect(firstChild?.textContent?.length).toBeGreaterThan(200)
   })
 
-  it('skips off-screen node when UA looks like a search bot', async () => {
+  it('skips injection when UA looks like a search bot', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
     await import('../../src/runtime')
     ;(window as any).YourPkg.init()
     await waitForDOMUpdate()
 
-    expect(document.querySelector('[data-scrape-canary]')).toBeNull()
+    expect(document.body.textContent).toBe('')
+    expect(document.body.childNodes.length).toBe(0)
   })
 })
