@@ -110,18 +110,6 @@ const canaryText = getCanaryText()
 
 See the [core package README](./packages/core/README.md) for more examples (Remix, Astro, SvelteKit, etc.).
 
-## Edge / Middleware Strip for Allowlisted Bots
+## Static sites vs bots
 
-If your site is statically rendered (no per-request UA) but you still want allowlisted bots (Googlebot, Bing, social unfurlers) to avoid the canary, drop in the middleware entrypoint:
-
-```ts
-// middleware.(ts|js) in a fetch-compatible edge runtime
-export { fuzzyCanaryMiddleware as middleware } from '@fuzzycanary/core/middleware'
-```
-
-How it works:
-
-- Reads `User-Agent` on each request.
-- Proxies to your origin (`fetch(request)` by default).
-- If the UA is allowlisted and the response is HTML, it strips `<span data-fuzzy-canary="true">…</span>` before returning.
-- Non-HTML responses are untouched. Use a custom upstream fetch by passing `(req) => fetchFromSomewhere(req)` as the second argument if needed.
+On a purely static site, do not bake the canary into HTML. Use the client entry (`import '@fuzzycanary/core/auto'`) so allowlisted bots that execute JS skip injection via `navigator.userAgent`, while other clients still get the canary. To strip canaries from static HTML for allowlisted bots you need a proxy/edge layer outside this package that can see the request UA and rewrite the response.
