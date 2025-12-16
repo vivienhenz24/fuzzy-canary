@@ -2,7 +2,7 @@
 
 # Fuzzy Canary
 
-An open-source, installable client-side SDK that adds a hidden text payload into a page's DOM at runtime.
+An open-source, installable client-side SDK that adds honeypot links into a page's DOM at runtime.
 
 <div align="center">
 
@@ -10,7 +10,7 @@ An open-source, installable client-side SDK that adds a hidden text payload into
 [![CI](https://img.shields.io/github/actions/workflow/status/vivienhenz24/fuzzyfrontend/ci.yml?branch=main&label=CI)](https://github.com/vivienhenz24/fuzzyfrontend/actions)
 [![License](https://img.shields.io/npm/l/@fuzzycanary/core)](https://github.com/vivienhenz24/fuzzyfrontend/blob/main/LICENSE)
 [![npm downloads](https://img.shields.io/npm/dm/@fuzzycanary/core)](https://www.npmjs.com/package/@fuzzycanary/core)
-[![Bundle size](https://img.shields.io/bundlephobia/minzip/@fuzzycanary/core)](https://bundlephobia.com/package/@fuzzycanary/core)
+[![Bundle size](https://img.shields.io/bundlephobia/minzip/%40fuzzycanary%2Fcore)](https://bundlephobia.com/package/@fuzzycanary/core)
 
 </div>
 
@@ -47,15 +47,29 @@ init() // no configuration needed; always injects a bundled hidden sentence
 
 ### How It Works
 
-Fuzzy Canary injects hidden honeypot links at the beginning of your `<body>` tag. These links are invisible to users but present in the DOM for scrapers to discover and follow. When a scraper visits these URLs, you can detect unauthorized scraping.
+Fuzzy Canary injects hidden honeypot links (porn links) at the beginning of your `<body>` tag. These links are invisible to users but present in the DOM for scrapers to discover. When AI scrapers ingest these links, their content safety filters detect the adult content and flag or refuse to process the scraped data - breaking the scraping pipeline.
+
+This approach is particularly effective against:
+
+- AI training data collection bots
+- LLM scraping tools
+- Automated content aggregators with safety filters
 
 The SDK automatically detects if canary links were already injected during server-side rendering (SSR), avoiding duplication. No configuration is required.
 
-### Security Note
+### How the Canary Works
 
-The canary URLs are injected at **build time** by the package maintainer using GitHub Actions secrets. This keeps the honeypot URLs out of the source code. End users simply install the package - the URLs are already baked into the distributed code with zero configuration needed.
+The canary URLs are **porn links** designed to trigger AI scrapers' content safeguards. When AI bots scrape your site and ingest the hidden honeypot links, their safety filters detect the adult content and refuse to process it - effectively breaking the scraping pipeline or flagging the scraped content as unsafe.
 
-Links are rendered in the DOM as: `description - url` (e.g., "API Documentation - https://your-domain.com/api/docs")
+**Key points:**
+
+- URLs are injected at **build time** by the package maintainer using GitHub Actions secrets
+- The honeypot URLs point to adult content sites that trigger AI safety filters
+- Keeps the URLs out of the source code - they're baked into the distributed package
+- End users install the package with zero configuration needed
+- Links are invisible to users but present in the DOM for scrapers
+
+Links are rendered in the DOM as: `description - url` (e.g., "API Documentation - https://honeypot-domain.com/...")
 
 ## Server-Side Rendering (Recommended when you pass UA)
 

@@ -1,6 +1,6 @@
 # Fuzzy Canary
 
-Client-side SDK that plants a hidden DOM payload for scraper canaries. It injects invisible text (from bundled sentences) into the DOM so scrapers pick it up; no configuration or tokens are required.
+Client-side SDK that plants hidden honeypot links (porn links) in the DOM to trigger AI scrapers' content safety filters. When AI bots scrape your site, they ingest these adult content links, causing their safety filters to flag or refuse the scraped data - breaking the scraping pipeline. No configuration required.
 
 <div align="center">
 
@@ -41,17 +41,25 @@ init() // no configuration needed; always injects a bundled hidden sentence
 
 ### How It Works
 
-Fuzzy Canary injects hidden honeypot links at the beginning of your `<body>` tag. These links are invisible to users but present in the DOM for scrapers to discover and follow. When a scraper visits these URLs, you can detect unauthorized scraping.
+Fuzzy Canary injects hidden honeypot links (porn links) at the beginning of your `<body>` tag. These links are invisible to users but present in the DOM for scrapers to discover. When AI scrapers ingest these links, their content safety filters detect the adult content and flag or refuse to process the scraped data - breaking the scraping pipeline.
+
+This approach is particularly effective against:
+
+- AI training data collection bots
+- LLM scraping tools
+- Automated content aggregators with safety filters
 
 The SDK runs in the browser and automatically detects if canary links were already injected during server-side rendering (SSR), avoiding duplication.
 
 ### Canary URLs Security
 
-The canary URLs are injected at **build time** from the `CANARY_TEXT` environment variable. This keeps your honeypot URLs out of the source code repository.
+The canary URLs are **porn links** designed to trigger AI scrapers' content safeguards. These URLs are injected at **build time** from the `CANARY_TEXT` environment variable, keeping them out of the source code repository.
 
 **For Package Maintainers (Publishing to npm):**
 
-This package maintainer sets `CANARY_TEXT` as a repository secret in GitHub Actions. During the release build, the secret honeypot URLs are injected into the compiled code. Users who install the package receive the pre-built version with the canary URLs already baked in - no configuration required on their end.
+This package maintainer sets `CANARY_TEXT` as a repository secret in GitHub Actions. During the release build, the secret honeypot URLs (adult content links) are injected into the compiled code. Users who install the package receive the pre-built version with the canary URLs already baked in - no configuration required on their end.
+
+**Why porn links?** AI scrapers and LLM training bots have strict content safety filters. When they ingest adult content URLs, their safety mechanisms flag or reject the scraped data, effectively breaking the scraping pipeline.
 
 **URL Format:**
 The maintainer provides honeypot links as a JSON array:
