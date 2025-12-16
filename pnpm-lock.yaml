@@ -34,6 +34,10 @@ importers:
         version: 4.0.15(@types/node@25.0.1)(@vitest/ui@4.0.15)(jsdom@25.0.1)(terser@5.44.1)(yaml@2.8.2)
 
   packages/core:
+    dependencies:
+      react:
+        specifier: '>=16.8.0'
+        version: 19.2.3
     devDependencies:
       '@playwright/test':
         specifier: ^1.48.2
@@ -41,6 +45,9 @@ importers:
       '@types/node':
         specifier: ^25.0.1
         version: 25.0.1
+      '@types/react':
+        specifier: ^18.2.0
+        version: 18.3.27
       '@vitest/coverage-v8':
         specifier: ^4.0.15
         version: 4.0.15(vitest@4.0.15)
@@ -1101,6 +1108,10 @@ packages:
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
+
+  react@19.2.3:
+    resolution: {integrity: sha512-Ku/hhYbVjOQnXDZFv2+RibmLFGwFdeeKHFcOTlrt7xplBnya5OGn/hIRDsqDiSUcfORsDC7MPxwork8jBwsIWA==}
+    engines: {node: '>=0.10.0'}
 
   readdirp@4.1.2:
     resolution: {integrity: sha512-GDhwkLfywWL2s6vEjyhri+eXmfH6j1L7JE27WhqLeYzoh/A3DBaYGEj2H/HFZCn/kMfim73FXxEJTw06WtxQwg==}
@@ -2289,6 +2300,8 @@ snapshots:
   prettier@3.7.4: {}
 
   punycode@2.3.1: {}
+
+  react@19.2.3: {}
 
   readdirp@4.1.2: {}
 
