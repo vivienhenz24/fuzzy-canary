@@ -85,7 +85,7 @@ import '@fuzzycanary/core/auto'
 
 That's it. It will automatically inject the canary when the page loads.
 
-## SEO
+## Notes on SEO
 
 Fuzzy Canary tries to avoid showing the canary to legitimate search engines. It keeps a list of known bots—Google, Bing, DuckDuckGo, and so on—and skips injecting the links when it detects them.
 
