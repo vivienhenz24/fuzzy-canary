@@ -1,7 +1,15 @@
-import { describe, it, expect, vi } from 'vitest'
-import { getCanaryPayload, getCanaryText } from '../../src/index'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { getCanaryPayload } from '../../src/index'
 
 describe('SSR helpers', () => {
+  beforeEach(() => {
+    // Set CANARY_TEXT for tests
+    process.env.CANARY_TEXT = JSON.stringify([
+      { description: 'API Documentation', url: 'https://example.com/api/docs' },
+      { description: 'Internal Dashboard', url: 'https://example.com/admin/dashboard' },
+    ])
+  })
+
   it('getCanaryPayload returns array of canary links', () => {
     const payload = getCanaryPayload()
     expect(Array.isArray(payload)).toBe(true)
@@ -14,20 +22,10 @@ describe('SSR helpers', () => {
     expect(firstLink.url).toContain('http')
   })
 
-  it('getCanaryText returns space-separated URLs', () => {
-    const text = getCanaryText()
-    expect(typeof text).toBe('string')
-    expect(text).toContain('http')
-    expect(text).toContain('example.com')
-  })
-
-  it('getCanaryText extracts URLs from payload', () => {
+  it('getCanaryPayload returns empty array when CANARY_TEXT is not set', () => {
+    delete process.env.CANARY_TEXT
     const payload = getCanaryPayload()
-    const text = getCanaryText()
-
-    // Text should contain the URLs from payload
-    payload.forEach(link => {
-      expect(text).toContain(link.url)
-    })
+    expect(Array.isArray(payload)).toBe(true)
+    expect(payload.length).toBe(0)
   })
 })

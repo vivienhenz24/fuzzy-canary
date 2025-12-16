@@ -8,6 +8,11 @@ describe('auto entrypoint', () => {
     cleanupDOM()
     delete (globalThis as any)[AUTO_FLAG]
     vi.resetModules()
+    // Set CANARY_TEXT for tests
+    process.env.CANARY_TEXT = JSON.stringify([
+      { description: 'API Documentation', url: 'https://example.com/api/docs' },
+      { description: 'Internal Dashboard', url: 'https://example.com/admin/dashboard' },
+    ])
   })
 
   it('injects canary links when auto entry is imported', async () => {

@@ -7,6 +7,11 @@ describe('runtime.ts', () => {
     delete (window as any).YourPkg
     delete (globalThis as any)[Symbol.for('fuzzycanary.domInit')]
     vi.resetModules()
+    // Set CANARY_TEXT for tests
+    process.env.CANARY_TEXT = JSON.stringify([
+      { description: 'API Documentation', url: 'https://example.com/api/docs' },
+      { description: 'Internal Dashboard', url: 'https://example.com/admin/dashboard' },
+    ])
   })
 
   it('exposes window.YourPkg with init', async () => {

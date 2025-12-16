@@ -6,6 +6,11 @@ import { Canary } from '../../src/react'
 describe('react.tsx - Canary component', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    // Set CANARY_TEXT for tests
+    process.env.CANARY_TEXT = JSON.stringify([
+      { description: 'API Documentation', url: 'https://example.com/api/docs' },
+      { description: 'Internal Dashboard', url: 'https://example.com/admin/dashboard' },
+    ])
   })
 
   describe('Bot detection', () => {

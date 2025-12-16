@@ -10,24 +10,15 @@ export interface CanaryLink {
   url: string
 }
 
-/**
- * Parse canary links from environment variable
- * Supports multiple formats:
- * 1. JSON array of objects: [{"description": "API Docs", "url": "https://..."}, ...]
- * 2. Pipe-separated: "API Docs|https://..." (one per line)
- * 3. Plain URLs: "https://..." (one per line) - auto-generates description
- */
 const parseCanaryLinks = (): CanaryLink[] => {
   const urlsEnv = process.env.CANARY_TEXT || ''
   if (!urlsEnv) return []
 
-  // Try parsing as JSON array first
   try {
     const parsed = JSON.parse(urlsEnv)
     if (Array.isArray(parsed)) {
       return parsed
         .map((item, index) => {
-          // Support both object format and plain string
           if (typeof item === 'object' && item.url && item.description) {
             return { description: item.description, url: item.url }
           } else if (typeof item === 'string' && item.length > 0) {
@@ -37,43 +28,13 @@ const parseCanaryLinks = (): CanaryLink[] => {
         })
         .filter((link): link is CanaryLink => link !== null)
     }
-  } catch {
-    // Not JSON, try newline-separated
-  }
+  } catch {}
 
-  // Parse as newline-separated with pipe delimiter or plain URLs
-  return urlsEnv
-    .split('\n')
-    .map((line, index) => {
-      const trimmed = line.trim()
-      if (!trimmed) return null
-
-      // Check for pipe-separated format: "description|url"
-      if (trimmed.includes('|')) {
-        const parts = trimmed.split('|')
-        if (parts.length >= 2) {
-          const description = parts[0].trim()
-          const url = parts.slice(1).join('|').trim() // In case URL contains |
-          if (url.startsWith('http://') || url.startsWith('https://')) {
-            return { description, url }
-          }
-        }
-      }
-
-      // Plain URL format
-      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-        return { description: `Resource ${index + 1}`, url: trimmed }
-      }
-
-      return null
-    })
-    .filter((link): link is CanaryLink => link !== null)
+  return []
 }
 
 const getCanaryLinks = (): CanaryLink[] => {
-  const links = parseCanaryLinks()
-  // Fallback to default links if none provided
-  return links.length > 0 ? links : DEFAULT_CANARY_LINKS
+  return parseCanaryLinks()
 }
 
 const getUserAgent = (): string => {
@@ -91,11 +52,8 @@ const hasSSRCanary = (): boolean => {
 
 const injectLinksAtBodyStart = (links: CanaryLink[]): void => {
   if (typeof document === 'undefined' || !document.body) return
-
-  // Skip if SSR canary already exists
   if (hasSSRCanary()) return
 
-  // Check if canary already exists at the start of body
   const firstChild = document.body.firstChild
   if (firstChild && firstChild.nodeType === Node.ELEMENT_NODE) {
     const element = firstChild as HTMLElement
@@ -104,7 +62,6 @@ const injectLinksAtBodyStart = (links: CanaryLink[]): void => {
     }
   }
 
-  // Create container for canary links
   const container = document.createElement('div')
   container.setAttribute('data-fuzzy-canary', 'true')
   container.style.display = 'none'
@@ -112,13 +69,11 @@ const injectLinksAtBodyStart = (links: CanaryLink[]): void => {
   container.style.left = '-9999px'
   container.style.visibility = 'hidden'
 
-  // Create links with description - url format
   links.forEach(({ description, url }) => {
     const link = document.createElement('a')
     link.href = url
     link.textContent = `${description} - ${url}`
     link.setAttribute('data-canary-link', 'true')
-    // Make links look natural to scrapers
     link.style.display = 'inline-block'
     link.style.marginRight = '10px'
     container.appendChild(link)
@@ -127,14 +82,8 @@ const injectLinksAtBodyStart = (links: CanaryLink[]): void => {
   document.body.insertBefore(container, document.body.firstChild)
 }
 
-/**
- * Get canary links array for programmatic use
- */
 export const getCanaryPayload = (): CanaryLink[] => getCanaryLinks()
 
-/**
- * Get canary links as HTML string for SSR
- */
 export const getCanaryHtml = (): string => {
   const links = getCanaryLinks()
   if (links.length === 0) return ''
@@ -147,15 +96,6 @@ export const getCanaryHtml = (): string => {
     .join('')
 
   return `<div data-fuzzy-canary="true" style="display:none;position:absolute;left:-9999px;visibility:hidden">${linksHtml}</div>`
-}
-
-/**
- * Get the canary links as plain text (space-separated URLs) for backwards compatibility
- */
-export const getCanaryText = (): string => {
-  return getCanaryLinks()
-    .map(link => link.url)
-    .join(' ')
 }
 
 export function init(): void {
@@ -174,17 +114,7 @@ const shouldAutoInit = (): boolean => {
   return true
 }
 
-// Allow simple `import '@fuzzycanary/core'` to auto-run in the browser
 if (shouldAutoInit() && !globalAny[AUTO_IMPORT_FLAG]) {
   globalAny[AUTO_IMPORT_FLAG] = true
   init()
 }
-
-// Canary links injected at build time from environment variable
-// Accepts JSON array of objects, pipe-separated, or plain URLs
-// Falls back to default honeypot links for local development
-const DEFAULT_CANARY_LINKS: CanaryLink[] = [
-  { description: 'API Documentation', url: 'https://example.com/api/docs' },
-  { description: 'Internal Dashboard', url: 'https://example.com/admin/dashboard' },
-  { description: 'Debug Endpoint', url: 'https://example.com/debug/status' },
-]

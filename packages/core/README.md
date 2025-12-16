@@ -54,9 +54,7 @@ The canary URLs are injected at **build time** from the `CANARY_TEXT` environmen
 This package maintainer sets `CANARY_TEXT` as a repository secret in GitHub Actions. During the release build, the secret honeypot URLs are injected into the compiled code. Users who install the package receive the pre-built version with the canary URLs already baked in - no configuration required on their end.
 
 **URL Format:**
-The maintainer can provide honeypot links in multiple formats:
-
-**Option 1: JSON with descriptions (Recommended)**
+The maintainer provides honeypot links as a JSON array:
 
 ```json
 [
@@ -66,15 +64,7 @@ The maintainer can provide honeypot links in multiple formats:
 ]
 ```
 
-**Option 2: Pipe-separated (description|url)**
-
-```
-API Documentation|https://your-domain.com/api/docs
-Internal Dashboard|https://your-domain.com/admin/dashboard
-Debug Endpoint|https://your-domain.com/debug/status
-```
-
-**Option 3: Plain URLs (auto-generates descriptions)**
+You can also use plain strings in the array, which will auto-generate descriptions:
 
 ```json
 ["https://your-domain.com/trap1", "https://your-domain.com/trap2"]
@@ -181,29 +171,29 @@ export default function App() {
 
 ### Non-React Frameworks
 
-For other frameworks, use the `getCanaryText()` utility:
+For other frameworks, use the `getCanaryHtml()` utility:
 
 ```ts
-import { getCanaryText } from '@fuzzycanary/core'
+import { getCanaryHtml } from '@fuzzycanary/core'
 
 // In your template or SSR handler
-const canaryText = getCanaryText()
+const canaryHtml = getCanaryHtml()
 
 // Insert at the start of body:
-// <body><span data-fuzzy-canary="true" style="display:none;">${canaryText}</span>...
+// <body>{canaryHtml}...
 ```
 
 ### Astro Example
 
 ```astro
 ---
-import { getCanaryText } from '@fuzzycanary/core'
-const canaryText = getCanaryText()
+import { getCanaryHtml } from '@fuzzycanary/core'
+const canaryHtml = getCanaryHtml()
 ---
 
 <html>
   <body>
-    <span data-fuzzy-canary="true" style="display:none;">{canaryText}</span>
+    <Fragment set:html={canaryHtml} />
     <slot />
   </body>
 </html>
@@ -213,11 +203,11 @@ const canaryText = getCanaryText()
 
 ```svelte
 <script>
-  import { getCanaryText } from '@fuzzycanary/core'
-  const canaryText = getCanaryText()
+  import { getCanaryHtml } from '@fuzzycanary/core'
+  const canaryHtml = getCanaryHtml()
 </script>
 
-<span data-fuzzy-canary="true" style="display:none;">{canaryText}</span>
+{@html canaryHtml}
 <slot />
 ```
 

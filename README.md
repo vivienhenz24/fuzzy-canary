@@ -80,7 +80,7 @@ export default function RootLayout({ children }) {
 }
 ```
 
-**Zero-Config**: The client-side code automatically detects the SSR-injected canary and skips re-injection.
+**Zero-Config**: The client-side code automatically detects the SSR-injected canary and skips re-injection. The component accepts an optional `userAgent` prop for manual bot detection in non-Next.js frameworks.
 
 ### Next.js App Router
 
@@ -103,19 +103,100 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
 **Zero-Config**: The component automatically detects user agent from Next.js headers and skips rendering for legitimate bots (Google, Bing, etc.).
 
+**Note**: Auto-detection only works in Next.js Server Components. For other frameworks (Remix, etc.), you need to pass the `userAgent` prop manually.
+
+### Remix Example
+
+```tsx
+// app/root.tsx
+import { Canary } from '@fuzzycanary/core/react'
+import { useLoaderData } from '@remix-run/react'
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const userAgent = request.headers.get('user-agent') || ''
+  return { userAgent }
+}
+
+export default function App() {
+  const { userAgent } = useLoaderData<typeof loader>()
+
+  return (
+    <html lang="en">
+      <body>
+        <Canary userAgent={userAgent} />
+        <Outlet />
+      </body>
+    </html>
+  )
+}
+```
+
+### Next.js Pages Router
+
+```tsx
+// pages/_document.tsx
+import { Html, Head, Main, NextScript } from 'next/document'
+import { Canary } from '@fuzzycanary/core/react'
+
+export default function Document() {
+  return (
+    <Html>
+      <Head />
+      <body>
+        <Canary />
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  )
+}
+```
+
+**Note**: Auto-detection works in Pages Router too, but `_document.tsx` runs in a different context. For best results, consider using client-side initialization (`import '@fuzzycanary/core/auto'`) which automatically detects bots.
+
 ### Non-React Frameworks
 
-For other frameworks, use the `getCanaryText()` utility:
+For other frameworks, use the `getCanaryHtml()` utility:
 
 ```ts
-import { getCanaryText } from '@fuzzycanary/core'
+import { getCanaryHtml } from '@fuzzycanary/core'
 
-const canaryText = getCanaryText()
+const canaryHtml = getCanaryHtml()
 // Insert at the start of body in your template
 ```
 
-See the [core package README](./packages/core/README.md) for more examples (Remix, Astro, SvelteKit, etc.).
+### Astro Example
+
+```astro
+---
+import { getCanaryHtml } from '@fuzzycanary/core'
+const canaryHtml = getCanaryHtml()
+---
+
+<html>
+  <body>
+    <Fragment set:html={canaryHtml} />
+    <slot />
+  </body>
+</html>
+```
+
+### SvelteKit Example
+
+```svelte
+<script>
+  import { getCanaryHtml } from '@fuzzycanary/core'
+  const canaryHtml = getCanaryHtml()
+</script>
+
+{@html canaryHtml}
+<slot />
+```
+
+See the [core package README](./packages/core/README.md) for more details.
 
 ## Static sites vs bots
 
 On a purely static site, do not bake the canary into HTML. Use the client entry (`import '@fuzzycanary/core/auto'`) so allowlisted bots that execute JS skip injection via `navigator.userAgent`, while other clients still get the canary. To strip canaries from static HTML for allowlisted bots you need a proxy/edge layer outside this package that can see the request UA and rewrite the response.
+
+**User-Agent filtering is inherently imperfect on static output**: if your pages are generated without per-request context, the build step cannot see the UA, so the canary HTML cannot be trimmed for allowlisted crawlers. You would need a runtime layer (proxy/edge middleware) to remove the canary for those bots.

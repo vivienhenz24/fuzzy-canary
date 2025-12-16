@@ -36,13 +36,12 @@ export function Canary({ userAgent: propUserAgent }: CanaryProps = {}): JSX.Elem
   let userAgent = propUserAgent
 
   if (!userAgent) {
+    // In static exports there is no per-request UA, so we can't strip the canary for allowlisted bots at build time.
     try {
-      // Try to get headers from Next.js (only works in Server Components)
       const { headers } = require('next/headers')
       const headersList = headers()
       userAgent = headersList.get('user-agent') || undefined
     } catch {
-      // Not in Next.js environment or not a Server Component - graceful fallback
       userAgent = undefined
     }
   }
@@ -81,9 +80,3 @@ export function Canary({ userAgent: propUserAgent }: CanaryProps = {}): JSX.Elem
     </div>
   )
 }
-
-/**
- * Get the canary HTML for manual insertion in non-React frameworks.
- * Use this in templates, HTML strings, or other server-side rendering contexts.
- */
-export const getCanaryText = (): string => getCanaryHtml()
