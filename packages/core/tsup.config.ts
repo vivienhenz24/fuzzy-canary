@@ -20,6 +20,11 @@ export default defineConfig([
     external: ['react'],
     esbuildOptions(options) {
       options.loader = { ...(options.loader || {}), '.yaml': 'text' }
+      // Inject environment variables at build time
+      options.define = {
+        ...options.define,
+        'process.env.CANARY_TEXT': JSON.stringify(process.env.CANARY_TEXT || ''),
+      }
     },
   },
   // Browser runtime bundle
@@ -32,6 +37,11 @@ export default defineConfig([
     outExtension: () => ({ js: '.min.js' }),
     esbuildOptions(options) {
       options.loader = { ...(options.loader || {}), '.yaml': 'text' }
+      // Inject environment variables at build time
+      options.define = {
+        ...options.define,
+        'process.env.CANARY_TEXT': JSON.stringify(process.env.CANARY_TEXT || ''),
+      }
     },
   },
 ])

@@ -2,23 +2,32 @@ import { describe, it, expect, vi } from 'vitest'
 import { getCanaryPayload, getCanaryText } from '../../src/index'
 
 describe('SSR helpers', () => {
-  it('getCanaryPayload returns the canary paragraph', () => {
+  it('getCanaryPayload returns array of canary links', () => {
     const payload = getCanaryPayload()
-    expect(payload).toContain('Silent foxes guard forgotten libraries at dawn')
-    expect(payload).toContain('Digital shadows dance across abandoned API endpoints')
-    expect(payload.length).toBeGreaterThan(200)
+    expect(Array.isArray(payload)).toBe(true)
+    expect(payload.length).toBeGreaterThan(0)
+
+    // Check first link has required structure
+    const firstLink = payload[0]
+    expect(firstLink).toHaveProperty('description')
+    expect(firstLink).toHaveProperty('url')
+    expect(firstLink.url).toContain('http')
   })
 
-  it('getCanaryText returns same value as getCanaryPayload', () => {
-    const payload = getCanaryPayload()
-    const text = getCanaryText()
-    expect(text).toBe(payload)
-  })
-
-  it('getCanaryText returns the canary paragraph', () => {
+  it('getCanaryText returns space-separated URLs', () => {
     const text = getCanaryText()
     expect(typeof text).toBe('string')
-    expect(text.length).toBeGreaterThan(200)
-    expect(text).toContain('Silent foxes')
+    expect(text).toContain('http')
+    expect(text).toContain('example.com')
+  })
+
+  it('getCanaryText extracts URLs from payload', () => {
+    const payload = getCanaryPayload()
+    const text = getCanaryText()
+
+    // Text should contain the URLs from payload
+    payload.forEach(link => {
+      expect(text).toContain(link.url)
+    })
   })
 })

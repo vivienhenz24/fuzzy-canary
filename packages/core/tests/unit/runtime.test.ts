@@ -22,14 +22,19 @@ describe('runtime.ts', () => {
 
     const firstChild = document.body.firstChild
     expect(firstChild?.nodeType).toBe(Node.ELEMENT_NODE)
-    expect((firstChild as HTMLElement)?.tagName).toBe('SPAN')
+    expect((firstChild as HTMLElement)?.tagName).toBe('DIV')
     expect((firstChild as HTMLElement)?.getAttribute('data-fuzzy-canary')).toBe('true')
     expect((firstChild as HTMLElement)?.style.display).toBe('none')
-    expect(firstChild?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
-    expect(firstChild?.textContent).toContain(
-      'Digital shadows dance across abandoned API endpoints'
-    )
-    expect(firstChild?.textContent?.length).toBeGreaterThan(200)
+    expect((firstChild as HTMLElement)?.style.position).toBe('absolute')
+
+    // Check that links were injected
+    const links = (firstChild as HTMLElement)?.querySelectorAll('a[data-canary-link]')
+    expect(links.length).toBeGreaterThan(0)
+
+    // Check first link has proper attributes
+    const firstLink = links[0] as HTMLAnchorElement
+    expect(firstLink.getAttribute('data-canary-link')).toBe('true')
+    expect(firstLink.href).toContain('http')
   })
 
   it('skips injection when UA looks like a search bot', async () => {

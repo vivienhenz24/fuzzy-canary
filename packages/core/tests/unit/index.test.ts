@@ -8,21 +8,28 @@ describe('index.ts - canary placement strategy (no config)', () => {
     vi.clearAllMocks()
   })
 
-  it('injects text at the beginning of body with the canary paragraph', async () => {
+  it('injects hidden links at the beginning of body', async () => {
     init()
     await waitForDOMUpdate()
 
-    // Check that a hidden span was injected at the start of body
+    // Check that a hidden div container was injected at the start of body
     const firstChild = document.body.firstChild
     expect(firstChild?.nodeType).toBe(Node.ELEMENT_NODE)
-    expect((firstChild as HTMLElement)?.tagName).toBe('SPAN')
+    expect((firstChild as HTMLElement)?.tagName).toBe('DIV')
     expect((firstChild as HTMLElement)?.getAttribute('data-fuzzy-canary')).toBe('true')
     expect((firstChild as HTMLElement)?.style.display).toBe('none')
-    expect(firstChild?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
-    expect(firstChild?.textContent).toContain(
-      'Digital shadows dance across abandoned API endpoints'
-    )
-    expect(firstChild?.textContent?.length).toBeGreaterThan(200)
+    expect((firstChild as HTMLElement)?.style.position).toBe('absolute')
+    expect((firstChild as HTMLElement)?.style.left).toBe('-9999px')
+
+    // Check that links were injected
+    const links = (firstChild as HTMLElement)?.querySelectorAll('a[data-canary-link]')
+    expect(links.length).toBeGreaterThan(0)
+
+    // Check first link has proper attributes
+    const firstLink = links[0] as HTMLAnchorElement
+    expect(firstLink.getAttribute('data-canary-link')).toBe('true')
+    expect(firstLink.href).toContain('http')
+    expect(firstLink.textContent).toContain('-') // Should have "description - url" format
   })
 
   it('skips injection for known search bots', async () => {
@@ -38,9 +45,12 @@ describe('index.ts - canary placement strategy (no config)', () => {
 
   it('skips injection if SSR canary already exists', () => {
     // Simulate SSR-injected canary
-    const ssrCanary = document.createElement('span')
+    const ssrCanary = document.createElement('div')
     ssrCanary.setAttribute('data-fuzzy-canary', 'true')
-    ssrCanary.textContent = 'SSR canary text'
+    const link = document.createElement('a')
+    link.href = 'https://example.com/ssr-trap'
+    link.textContent = 'SSR Link'
+    ssrCanary.appendChild(link)
     document.body.appendChild(ssrCanary)
 
     init()

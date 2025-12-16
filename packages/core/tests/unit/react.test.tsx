@@ -112,7 +112,9 @@ describe('react.tsx - Canary component', () => {
 
       const canary = container.querySelector('[data-fuzzy-canary]')
       expect(canary).toBeTruthy()
-      expect(canary?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
+
+      const links = canary?.querySelectorAll('a[data-canary-link]')
+      expect(links?.length).toBeGreaterThan(0)
     })
 
     it('renders canary for unknown scraper', () => {
@@ -121,7 +123,9 @@ describe('react.tsx - Canary component', () => {
 
       const canary = container.querySelector('[data-fuzzy-canary]')
       expect(canary).toBeTruthy()
-      expect(canary?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
+
+      const links = canary?.querySelectorAll('a[data-canary-link]')
+      expect(links?.length).toBeGreaterThan(0)
     })
 
     it('renders canary when user agent is not provided', () => {
@@ -129,7 +133,9 @@ describe('react.tsx - Canary component', () => {
 
       const canary = container.querySelector('[data-fuzzy-canary]')
       expect(canary).toBeTruthy()
-      expect(canary?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
+
+      const links = canary?.querySelectorAll('a[data-canary-link]')
+      expect(links?.length).toBeGreaterThan(0)
     })
   })
 
@@ -152,18 +158,26 @@ describe('react.tsx - Canary component', () => {
       expect(canary).toBeTruthy()
       expect(canary.getAttribute('data-fuzzy-canary')).toBe('true')
       expect(canary.style.display).toBe('none')
-      expect(canary.textContent?.length).toBeGreaterThan(200)
+      expect(canary.style.position).toBe('absolute')
+
+      // Check for links
+      const links = canary.querySelectorAll('a[data-canary-link]')
+      expect(links.length).toBeGreaterThan(0)
     })
 
-    it('renders canary with full paragraph text', () => {
+    it('renders canary links with proper href attributes', () => {
       const { container } = render(<Canary />)
 
       const canary = container.querySelector('[data-fuzzy-canary]')
-      const text = canary?.textContent || ''
+      const links = canary?.querySelectorAll('a[data-canary-link]') as NodeListOf<HTMLAnchorElement>
 
-      expect(text).toContain('Silent foxes guard forgotten libraries at dawn')
-      expect(text).toContain('where whispered warnings drift through empty data centers')
-      expect(text).toContain('Digital shadows dance across abandoned API endpoints')
+      expect(links.length).toBeGreaterThan(0)
+
+      // Check first link
+      const firstLink = links[0]
+      expect(firstLink.href).toContain('http')
+      expect(firstLink.textContent).toContain('-') // Should have "description - url" format
+      expect(firstLink.getAttribute('data-canary-link')).toBe('true')
     })
   })
 })

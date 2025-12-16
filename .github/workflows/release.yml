@@ -39,6 +39,8 @@ jobs:
 
       - name: Build packages
         run: pnpm build
+        env:
+          CANARY_TEXT: ${{ secrets.CANARY_TEXT }}
 
       - name: Check if version already published
         id: version_check

@@ -41,9 +41,46 @@ init() // no configuration needed; always injects a bundled hidden sentence
 
 ### How It Works
 
-Fuzzy Canary injects plain text with a random sentence at the beginning of your `<body>` tag. The text is present in the DOM for scrapers to pick up but can be styled to be invisible to users.
+Fuzzy Canary injects hidden honeypot links at the beginning of your `<body>` tag. These links are invisible to users but present in the DOM for scrapers to discover and follow. When a scraper visits these URLs, you can detect unauthorized scraping.
 
-The SDK runs in the browser and automatically detects if a canary was already injected during server-side rendering (SSR), avoiding duplication.
+The SDK runs in the browser and automatically detects if canary links were already injected during server-side rendering (SSR), avoiding duplication.
+
+### Canary URLs Security
+
+The canary URLs are injected at **build time** from the `CANARY_TEXT` environment variable. This keeps your honeypot URLs out of the source code repository.
+
+**For Package Maintainers (Publishing to npm):**
+
+This package maintainer sets `CANARY_TEXT` as a repository secret in GitHub Actions. During the release build, the secret honeypot URLs are injected into the compiled code. Users who install the package receive the pre-built version with the canary URLs already baked in - no configuration required on their end.
+
+**URL Format:**
+The maintainer can provide honeypot links in multiple formats:
+
+**Option 1: JSON with descriptions (Recommended)**
+
+```json
+[
+  { "description": "API Documentation", "url": "https://your-domain.com/api/docs" },
+  { "description": "Internal Dashboard", "url": "https://your-domain.com/admin/dashboard" },
+  { "description": "Debug Endpoint", "url": "https://your-domain.com/debug/status" }
+]
+```
+
+**Option 2: Pipe-separated (description|url)**
+
+```
+API Documentation|https://your-domain.com/api/docs
+Internal Dashboard|https://your-domain.com/admin/dashboard
+Debug Endpoint|https://your-domain.com/debug/status
+```
+
+**Option 3: Plain URLs (auto-generates descriptions)**
+
+```json
+["https://your-domain.com/trap1", "https://your-domain.com/trap2"]
+```
+
+Links will be rendered in the DOM as: **description - url** making them look natural to scrapers.
 
 ## Server-Side Rendering (SSR)
 

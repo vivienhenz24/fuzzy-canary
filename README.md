@@ -47,9 +47,15 @@ init() // no configuration needed; always injects a bundled hidden sentence
 
 ### How It Works
 
-Fuzzy Canary injects plain text with a random sentence at the beginning of your `<body>` tag. The text is present in the DOM for scrapers to pick up but can be styled to be invisible to users.
+Fuzzy Canary injects hidden honeypot links at the beginning of your `<body>` tag. These links are invisible to users but present in the DOM for scrapers to discover and follow. When a scraper visits these URLs, you can detect unauthorized scraping.
 
-The SDK automatically detects if a canary was already injected during server-side rendering (SSR), avoiding duplication. No configuration is required.
+The SDK automatically detects if canary links were already injected during server-side rendering (SSR), avoiding duplication. No configuration is required.
+
+### Security Note
+
+The canary URLs are injected at **build time** by the package maintainer using GitHub Actions secrets. This keeps the honeypot URLs out of the source code. End users simply install the package - the URLs are already baked into the distributed code with zero configuration needed.
+
+Links are rendered in the DOM as: `description - url` (e.g., "API Documentation - https://your-domain.com/api/docs")
 
 ## Server-Side Rendering (Recommended when you pass UA)
 
