@@ -12,9 +12,12 @@ describe('index.ts - canary placement strategy (no config)', () => {
     init()
     await waitForDOMUpdate()
 
-    // Check that text was injected at the start of body
+    // Check that a hidden span was injected at the start of body
     const firstChild = document.body.firstChild
-    expect(firstChild?.nodeType).toBe(Node.TEXT_NODE)
+    expect(firstChild?.nodeType).toBe(Node.ELEMENT_NODE)
+    expect((firstChild as HTMLElement)?.tagName).toBe('SPAN')
+    expect((firstChild as HTMLElement)?.getAttribute('data-fuzzy-canary')).toBe('true')
+    expect((firstChild as HTMLElement)?.style.display).toBe('none')
     expect(firstChild?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
     expect(firstChild?.textContent).toContain(
       'Digital shadows dance across abandoned API endpoints'
@@ -42,10 +45,12 @@ describe('index.ts - canary placement strategy (no config)', () => {
 
     init()
 
-    // Should not inject another text node
-    const textNodes = Array.from(document.body.childNodes).filter(
-      node => node.nodeType === Node.TEXT_NODE
+    // Should not inject another canary element
+    const canaryElements = Array.from(document.body.childNodes).filter(
+      node =>
+        node.nodeType === Node.ELEMENT_NODE &&
+        (node as HTMLElement).getAttribute('data-fuzzy-canary') === 'true'
     )
-    expect(textNodes.length).toBe(0)
+    expect(canaryElements.length).toBe(1) // Only the SSR canary should exist
   })
 })

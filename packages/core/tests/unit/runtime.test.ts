@@ -21,7 +21,10 @@ describe('runtime.ts', () => {
     await waitForDOMUpdate()
 
     const firstChild = document.body.firstChild
-    expect(firstChild?.nodeType).toBe(Node.TEXT_NODE)
+    expect(firstChild?.nodeType).toBe(Node.ELEMENT_NODE)
+    expect((firstChild as HTMLElement)?.tagName).toBe('SPAN')
+    expect((firstChild as HTMLElement)?.getAttribute('data-fuzzy-canary')).toBe('true')
+    expect((firstChild as HTMLElement)?.style.display).toBe('none')
     expect(firstChild?.textContent).toContain('Silent foxes guard forgotten libraries at dawn')
     expect(firstChild?.textContent).toContain(
       'Digital shadows dance across abandoned API endpoints'
