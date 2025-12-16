@@ -15,6 +15,11 @@
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
     },
+    "./middleware": {
+      "types": "./dist/middleware.d.ts",
+      "import": "./dist/middleware.js",
+      "require": "./dist/middleware.cjs"
+    },
     "./auto": {
       "types": "./dist/auto.d.ts",
       "import": "./dist/auto.js",
@@ -64,12 +69,16 @@
     }
   },
   "devDependencies": {
-    "@types/react": "^18.2.0",
     "@playwright/test": "^1.48.2",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
     "@types/node": "^25.0.1",
+    "@types/react": "^18.2.0",
     "@vitest/coverage-v8": "^4.0.15",
     "@vitest/ui": "^4.0.15",
     "jsdom": "^25.0.1",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.15"

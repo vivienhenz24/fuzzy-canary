@@ -51,7 +51,7 @@ Fuzzy Canary injects plain text with a random sentence at the beginning of your 
 
 The SDK automatically detects if a canary was already injected during server-side rendering (SSR), avoiding duplication. No configuration is required.
 
-## Server-Side Rendering (Recommended)
+## Server-Side Rendering (Recommended when you pass UA)
 
 For maximum effectiveness against scrapers that don't execute JavaScript, use SSR to inject the canary into the initial HTML.
 
@@ -86,7 +86,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Canary />
+        <Canary />{' '}
+        {/* auto-detects Next headers; pass userAgent manually if you opt out of dynamic rendering */}
         {children}
       </body>
     </html>
@@ -108,3 +109,19 @@ const canaryText = getCanaryText()
 ```
 
 See the [core package README](./packages/core/README.md) for more examples (Remix, Astro, SvelteKit, etc.).
+
+## Edge / Middleware Strip for Allowlisted Bots
+
+If your site is statically rendered (no per-request UA) but you still want allowlisted bots (Googlebot, Bing, social unfurlers) to avoid the canary, drop in the middleware entrypoint:
+
+```ts
+// middleware.(ts|js) in a fetch-compatible edge runtime
+export { fuzzyCanaryMiddleware as middleware } from '@fuzzycanary/core/middleware'
+```
+
+How it works:
+
+- Reads `User-Agent` on each request.
+- Proxies to your origin (`fetch(request)` by default).
+- If the UA is allowlisted and the response is HTML, it strips `<span data-fuzzy-canary="true">…</span>` before returning.
+- Non-HTML responses are untouched. Use a custom upstream fetch by passing `(req) => fetchFromSomewhere(req)` as the second argument if needed.

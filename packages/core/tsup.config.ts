@@ -12,7 +12,7 @@ import { defineConfig } from 'tsup'
 export default defineConfig([
   // ESM and CJS builds for npm
   {
-    entry: ['src/index.ts', 'src/auto.ts', 'src/react.tsx'],
+    entry: ['src/index.ts', 'src/auto.ts', 'src/react.tsx', 'src/middleware.ts'],
     format: ['esm', 'cjs'],
     dts: true,
     clean: true,

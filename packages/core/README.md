@@ -23,7 +23,7 @@ npm install @fuzzycanary/core
 The simplest way to use Fuzzy Canary is with the auto-init import:
 
 ```ts
-// Entry file; just import once
+// Entry file; just import once (client-side)
 import '@fuzzycanary/core/auto' // immediately calls init() once
 ```
 
@@ -80,7 +80,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <Canary />
+        <Canary />{' '}
+        {/* auto-detects Next headers; pass userAgent manually if you opt out of dynamic rendering */}
         {children}
       </body>
     </html>
@@ -182,6 +183,30 @@ const canaryText = getCanaryText()
 <span data-fuzzy-canary="true" style="display:none;">{canaryText}</span>
 <slot />
 ```
+
+## Edge / Middleware Strip for Allowlisted Bots
+
+If you serve static HTML (no per-request UA) but still want allowlisted bots (Googlebot, Bing, social unfurlers) to avoid the canary, use the middleware entrypoint:
+
+```ts
+// middleware.(ts|js) in a fetch-compatible edge runtime
+export { fuzzyCanaryMiddleware as middleware } from '@fuzzycanary/core/middleware'
+```
+
+What it does:
+
+- Reads the `User-Agent` header.
+- Proxies to origin via `fetch(request)` (pass a custom upstream function if needed).
+- If UA is allowlisted and the response is HTML, strips `<span data-fuzzy-canary="true">…</span>` before returning.
+- Leaves non-HTML responses unchanged.
+
+Pure helper (if you already have the HTML string): `stripFuzzyCanary(html)`.
+
+## Choosing an approach
+
+- **Static sites:** Include `@fuzzycanary/core/auto` on the client; optionally add the middleware strip so allowlisted bots don’t see the canary baked into static HTML.
+- **SSR with UA available:** Render `<Canary userAgent={req.headers['user-agent']}>` (or rely on Next’s auto UA detection) so allowlisted bots are skipped at render time.
+- **Non-React servers:** Use `getCanaryText()` in your templates/handlers and gate it with `isAllowlistedBot(ua)` from `@fuzzycanary/core/allowlist` if you have the UA.
 
 ## Development
 
