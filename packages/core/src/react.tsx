@@ -1,56 +1,16 @@
 import React from 'react'
-import { getCanaryPayload, getCanaryHtml, type CanaryLink } from './index'
-import { isAllowlistedBot } from './allowlist'
+import { getCanaryPayload } from './index'
 
-export interface CanaryProps {
-  /**
-   * User agent string from the request headers.
-   * If provided, this will be used for bot detection.
-   * If not provided, the component will attempt to auto-detect from Next.js headers.
-   * If the user agent matches an allowlisted bot (Google, Bing, etc.), the canary will not render.
-   *
-   * @example
-   * ```tsx
-   * // Next.js - automatic detection (recommended)
-   * <Canary />
-   *
-   * // Other frameworks - manual
-   * <Canary userAgent={request.headers['user-agent']} />
-   * ```
-   */
-  userAgent?: string
-}
+export interface CanaryProps {}
 
 /**
  * Canary component for server-side rendering.
  * Renders hidden canary links at the start of the body.
  * The links are invisible but present in the DOM for scrapers to pick up and follow.
  *
- * Automatically detects user agent from Next.js headers if not provided.
- *
- * @param userAgent - Optional user agent string to check against allowlist. If not provided, attempts to auto-detect from Next.js headers.
- * @returns Hidden div with canary links, or null if user agent is allowlisted
+ * @returns Hidden div with canary links, or null if no links are configured
  */
-export function Canary({ userAgent: propUserAgent }: CanaryProps = {}): JSX.Element | null {
-  // Auto-detect user agent if not provided and we're in Next.js
-  let userAgent = propUserAgent
-
-  if (!userAgent) {
-    // In static exports there is no per-request UA, so we can't strip the canary for allowlisted bots at build time.
-    try {
-      const { headers } = require('next/headers')
-      const headersList = headers()
-      userAgent = headersList.get('user-agent') || undefined
-    } catch {
-      userAgent = undefined
-    }
-  }
-
-  // Skip rendering for allowlisted bots (Google, Bing, social media crawlers, etc.)
-  if (userAgent && isAllowlistedBot(userAgent)) {
-    return null
-  }
-
+export function Canary(_props: CanaryProps = {}): JSX.Element | null {
   const links = getCanaryPayload()
 
   if (links.length === 0) {

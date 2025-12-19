@@ -1,6 +1,6 @@
 {
   "name": "@fuzzycanary/core",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Client-side SDK for adding hidden DOM payloads to deter scrapers",
   "repository": {
     "type": "git",
@@ -54,7 +54,7 @@
     "hidden",
     "payload"
   ],
-  "license": "MIT",
+  "license": "Apache-2.0",
   "peerDependencies": {
     "react": ">=16.8.0"
   },

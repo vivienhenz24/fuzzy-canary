@@ -1,5 +1,3 @@
-import { isAllowlistedBot } from './allowlist'
-
 const AUTO_INIT_FLAG = Symbol.for('fuzzycanary.domInit')
 const AUTO_IMPORT_FLAG = Symbol.for('fuzzycanary.autoImport')
 const DISABLE_AUTO_FLAG = Symbol.for('fuzzycanary.disableAuto')
@@ -35,11 +33,6 @@ const parseCanaryLinks = (): CanaryLink[] => {
 
 const getCanaryLinks = (): CanaryLink[] => {
   return parseCanaryLinks()
-}
-
-const getUserAgent = (): string => {
-  if (typeof navigator !== 'undefined' && navigator.userAgent) return navigator.userAgent
-  return ''
 }
 
 const hasSSRCanary = (): boolean => {
@@ -101,7 +94,6 @@ export const getCanaryHtml = (): string => {
 export function init(): void {
   if (globalAny[AUTO_INIT_FLAG]) return
   if (typeof document === 'undefined' || !document.body) return
-  if (isAllowlistedBot(getUserAgent())) return
 
   const links = getCanaryPayload()
   injectLinksAtBodyStart(links)
