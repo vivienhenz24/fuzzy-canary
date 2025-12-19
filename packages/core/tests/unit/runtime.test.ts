@@ -42,13 +42,13 @@ describe('runtime.ts', () => {
     expect(firstLink.href).toContain('http')
   })
 
-  it('skips injection when UA looks like a search bot', async () => {
+  it('injects even when UA looks like a search bot', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
     await import('../../src/runtime')
     ;(window as any).YourPkg.init()
     await waitForDOMUpdate()
 
-    expect(document.body.textContent).toBe('')
-    expect(document.body.childNodes.length).toBe(0)
+    expect(document.body.textContent?.length).toBeGreaterThan(0)
+    expect(document.body.childNodes.length).toBeGreaterThan(0)
   })
 })

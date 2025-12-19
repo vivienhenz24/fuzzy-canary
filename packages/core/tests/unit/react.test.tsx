@@ -13,99 +13,30 @@ describe('react.tsx - Canary component', () => {
     ])
   })
 
-  describe('Bot detection', () => {
-    it('does not render canary for Googlebot', () => {
-      const userAgent = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)'
-      const { container } = render(<Canary userAgent={userAgent} />)
+  describe('Bot handling', () => {
+    const botUserAgents = [
+      'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+      'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)',
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 Applebot',
+      'DuckDuckBot/1.0; (+http://duckduckgo.com/duckduckbot.html)',
+      'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)',
+      'Twitterbot/1.0',
+      'LinkedInBot/1.0 (compatible; Mozilla/5.0; +http://www.linkedin.com)',
+      'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)',
+      'Discordbot/2.0',
+      'TelegramBot (like TwitterBot)',
+      'Pinterestbot/1.0',
+      'Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)',
+      'Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)',
+    ]
 
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-      expect(container.textContent).toBe('')
-    })
+    botUserAgents.forEach(userAgent => {
+      it(`renders canary for bot UA: ${userAgent.split(' ')[0]}`, () => {
+        const { container } = render(<Canary userAgent={userAgent} />)
 
-    it('does not render canary for Bingbot', () => {
-      const userAgent = 'Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for Applebot', () => {
-      const userAgent =
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15 Applebot'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for DuckDuckBot', () => {
-      const userAgent = 'DuckDuckBot/1.0; (+http://duckduckgo.com/duckduckbot.html)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for Facebook crawler', () => {
-      const userAgent = 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for Twitterbot', () => {
-      const userAgent = 'Twitterbot/1.0'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for LinkedInBot', () => {
-      const userAgent = 'LinkedInBot/1.0 (compatible; Mozilla/5.0; +http://www.linkedin.com)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for Slackbot', () => {
-      const userAgent = 'Slackbot-LinkExpanding 1.0 (+https://api.slack.com/robots)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for Discordbot', () => {
-      const userAgent = 'Discordbot/2.0'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for TelegramBot', () => {
-      const userAgent = 'TelegramBot (like TwitterBot)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for Pinterestbot', () => {
-      const userAgent = 'Pinterestbot/1.0'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for Baiduspider', () => {
-      const userAgent =
-        'Mozilla/5.0 (compatible; Baiduspider/2.0; +http://www.baidu.com/search/spider.html)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
-    })
-
-    it('does not render canary for YandexBot', () => {
-      const userAgent = 'Mozilla/5.0 (compatible; YandexBot/3.0; +http://yandex.com/bots)'
-      const { container } = render(<Canary userAgent={userAgent} />)
-
-      expect(container.querySelector('[data-fuzzy-canary]')).toBeNull()
+        const canary = container.querySelector('[data-fuzzy-canary]')
+        expect(canary).toBeTruthy()
+      })
     })
   })
 

@@ -37,15 +37,15 @@ describe('index.ts - canary placement strategy (no config)', () => {
     expect(firstLink.textContent).toContain('-') // Should have "description - url" format
   })
 
-  it('skips injection for known search bots', async () => {
+  it('still injects for known search bots', async () => {
     setUserAgent('Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)')
 
     init()
     await waitForDOMUpdate()
 
-    // Body should be empty since bot injection is skipped
-    expect(document.body.textContent).toBe('')
-    expect(document.body.childNodes.length).toBe(0)
+    // Body should contain the injected canary even for bot user agents
+    expect(document.body.textContent?.length).toBeGreaterThan(0)
+    expect(document.body.childNodes.length).toBeGreaterThan(0)
   })
 
   it('skips injection if SSR canary already exists', () => {
