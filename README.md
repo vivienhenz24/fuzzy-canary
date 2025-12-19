@@ -1,5 +1,7 @@
 
 
+![Banner](./readme-banner.png)
+
 # Fuzzy Canary
 
 AI companies are scraping everyone's sites for training data. If you're self-hosting your blog, there's not much you can do about it, except maybe make them think your site contains content they won't want. Fuzzy Canary plants invisible links (to porn websites...) in your HTML that trigger scrapers' content safeguards.
