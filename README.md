@@ -1,4 +1,4 @@
-![Banner](./public/banner.png)
+
 
 # Fuzzy Canary
 
